@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import { Calendar, PlusCircle } from 'lucide-react';
 import type { UserPermissions } from '@/features/permissions';
 
 export interface NavItem {
@@ -32,5 +33,11 @@ export interface NavGroup {
  *   ]}
  */
 export const sidebarGroups: NavGroup[] = [
-  // Add your nav groups here
+  {
+    label: 'Bookings',
+    items: [
+      { label: 'My Bookings', href: '/bookings', icon: Calendar },
+      { label: 'Create Booking', href: '/bookings/create', icon: PlusCircle },
+    ],
+  },
 ];
