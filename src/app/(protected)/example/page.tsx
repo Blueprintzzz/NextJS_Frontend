@@ -1,32 +1,13 @@
-// This is a template for new feature pages.
-// Copy this file to app/(protected)/<your-feature>/page.tsx and rename accordingly.
-
 'use client';
 
-import { useAppSelector } from '@/store/hooks';
-import { usePermissions } from '@/features/permissions';
 import { ExampleList, useExampleData } from '@/features/example';
 
 export default function ExamplePage() {
-  const orgId = useAppSelector((s) => s.user.currentOrg?.orgId ?? '');
-
-  // Permission gate — fail-closed: returns null while loading.
-  // usePermissions() reads currentOrg from Redux internally.
-  const { loading: permLoading } = usePermissions();
-  if (permLoading) return null;
-
-  // Uncomment to gate this page once you have a can* helper:
-  // import { canDoSomething } from '@/features/permissions';
-  // if (!canDoSomething(permissions)) {
-  //   return <p className="p-8 text-sm text-gray-500">Access denied.</p>;
-  // }
-
-  return <ExamplePageContent orgId={orgId} />;
+  return <ExamplePageContent />;
 }
 
-// Inner component runs hooks only after permission check passes
-function ExamplePageContent({ orgId }: { orgId: string }) {
-  const { data, isLoading, isError } = useExampleData(orgId);
+function ExamplePageContent() {
+  const { data, isLoading, isError } = useExampleData('');
 
   return (
     <div className="p-8 max-w-2xl mx-auto">

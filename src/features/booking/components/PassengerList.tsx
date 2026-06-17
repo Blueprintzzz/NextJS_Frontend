@@ -42,7 +42,7 @@ export function PassengerList({ booking, editable }: PassengerListProps) {
                 <td className="px-4 py-2">{p.passengerName}</td>
                 <td className="px-4 py-2">{p.email}</td>
                 <td className="px-4 py-2">{p.phone}</td>
-                <td className="px-4 py-2">{p.dateOfBirth}</td>
+                <td className="px-4 py-2">{new Date(p.dateOfBirth).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{p.passportNumber ?? '—'}</td>
                 {editable && (
                   <td className="px-4 py-2">

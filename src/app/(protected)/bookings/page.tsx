@@ -2,13 +2,9 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePermissions } from '@/features/permissions';
 import { BookingList } from '@/features/booking';
 
 export default function BookingsPage() {
-  const { loading } = usePermissions();
-  if (loading) return null;
-
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">

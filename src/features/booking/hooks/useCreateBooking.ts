@@ -10,7 +10,7 @@ export function useCreateBooking() {
   return useMutation({
     mutationFn: (data: CreateBookingInput) => BookingAPI.createBooking(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'list'] });
       toast.success('Booking created successfully');
     },
     onError: (err: Error) => {

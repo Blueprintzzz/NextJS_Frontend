@@ -19,7 +19,7 @@ export function usePaymentRecording() {
     onSuccess: (_result, { bookingId }) => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'detail', bookingId] });
       queryClient.invalidateQueries({ queryKey: ['bookings', 'payments', bookingId] });
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'list'] });
       toast.success('Payment recorded');
     },
     onError: (err: Error) => {

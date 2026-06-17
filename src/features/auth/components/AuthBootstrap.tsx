@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setUser, setToken, setOrgs, setCurrentOrg, clearUser } from '@/store/slices/userSlice';
+import { setUser, setToken, clearUser } from '@/store/slices/userSlice';
 import { localStorageGetJSON } from '@/lib/utils/localStorage';
 import { decodeTokenPayload } from '../utils/authUtils';
 
@@ -16,9 +16,6 @@ interface PersistedUser {
   firstName?: string;
   lastName?: string;
   role?: string;
-  orgs?: unknown[];
-  organizations?: unknown[];
-  currentOrg?: { orgId: string; name: string; role: string };
   [key: string]: unknown;
 }
 
@@ -50,11 +47,6 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
 
     dispatch(setUser(userData as Record<string, unknown>));
     dispatch(setToken(token));
-
-    const orgs = userData?.orgs ?? userData?.organizations ?? [];
-    if (Array.isArray(orgs) && orgs.length) dispatch(setOrgs(orgs as never[]));
-    if (userData?.currentOrg) dispatch(setCurrentOrg(userData.currentOrg));
-
     setChecked(true);
   }, [dispatch, router]);
 

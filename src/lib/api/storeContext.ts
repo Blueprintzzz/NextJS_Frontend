@@ -40,8 +40,6 @@ interface RawUserData {
   baseToken?: string;
   tokens?: { accessToken?: string };
   email?: string;
-  currentOrg?: { orgId?: string };
-  orgId?: string;
   [key: string]: unknown;
 }
 
@@ -82,46 +80,6 @@ export function getAuthToken(): string | null {
     if (user.baseToken) return user.baseToken;
     if (user.tokens?.accessToken) return user.tokens.accessToken;
     if (userData.tokens?.accessToken) return userData.tokens.accessToken;
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Org ID resolution
-// ---------------------------------------------------------------------------
-
-/** Sentinel values that indicate no real org is selected. */
-const INVALID_ORG_VALUES = new Set(['(active)', 'active']);
-
-/**
- * Resolve the currently selected organisation ID.
- *
- * Priority order (mirrors V1 getSelectedOrgId exactly):
- *   1. Redux store state.user.currentOrg.orgId
- *   2. Redux store state.user.selectedOrgId
- *   3. localStorage 'user'.currentOrg.orgId
- *   4. localStorage 'user'.orgId
- *   5. localStorage 'selectedOrgId' key
- */
-export function getSelectedOrgId(): string | null {
-  try {
-    const state = store.getState();
-
-    const currentOrgId = state.user.currentOrg?.orgId;
-    if (currentOrgId && !INVALID_ORG_VALUES.has(currentOrgId)) return currentOrgId;
-
-    const selectedOrgId = state.user.selectedOrgId;
-    if (selectedOrgId && !INVALID_ORG_VALUES.has(selectedOrgId)) return selectedOrgId;
-
-    const userData = getCurrentUserData();
-    if (userData.currentOrg?.orgId) return userData.currentOrg.orgId;
-    if (userData.orgId) return userData.orgId;
-
-    const lsOrgId = localStorageGet('selectedOrgId');
-    if (lsOrgId && !INVALID_ORG_VALUES.has(lsOrgId)) return lsOrgId;
 
     return null;
   } catch {

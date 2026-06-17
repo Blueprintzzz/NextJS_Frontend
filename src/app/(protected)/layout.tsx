@@ -1,16 +1,7 @@
 /**
- * (protected) layout
- *
- * Server Component shell — renders the AuthBootstrap client component
- * which owns all browser-side auth logic, then wraps authenticated
- * content in the sidebar + main content shell.
- *
- * Auth behaviour (matches V1 ProtectedRoute exactly):
- *   - Validates JWT from localStorage on mount
- *   - Redirects unauthenticated users to /login
- *   - Enforces org selection before rendering children
- *   - Runs periodic 5-minute token validation
- *   - Syncs logout across browser tabs via storage events
+ * (protected) layout — wraps authenticated pages with AuthBootstrap.
+ * Validates JWT on mount, redirects to /login if invalid,
+ * runs periodic 5-min token check, and syncs logout across tabs.
  */
 import { AuthBootstrap } from '@/features/auth';
 import { FeatureSidebar } from '@/features/sidebar';

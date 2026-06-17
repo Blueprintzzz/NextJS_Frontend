@@ -10,7 +10,7 @@ export function useCancelBooking() {
     mutationFn: (id: string) => BookingAPI.cancelBooking(id),
     onSuccess: (_result, id) => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'detail', id] });
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'list'] });
       toast.success('Booking cancelled');
     },
     onError: (err: Error) => {

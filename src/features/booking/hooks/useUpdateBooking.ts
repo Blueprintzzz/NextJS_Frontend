@@ -12,7 +12,7 @@ export function useUpdateBooking() {
       BookingAPI.updateBooking(id, data),
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'detail', id] });
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'list'] });
       toast.success('Booking updated');
     },
     onError: (err: Error) => {

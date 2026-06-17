@@ -12,13 +12,6 @@ export const authApi = {
     await apiRequest('/auth/logout', { method: 'POST' });
   },
 
-  async switchOrg(orgId: string): Promise<unknown> {
-    return apiRequest('/auth/switch-org', {
-      method: 'POST',
-      body: JSON.stringify({ orgId }),
-    });
-  },
-
   async getProfile(): Promise<unknown> {
     return apiRequest('/auth/profile');
   },

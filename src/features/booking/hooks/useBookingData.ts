@@ -2,23 +2,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { BookingAPI } from '../api/booking.api';
-import type { BookingQueryParams } from '../types/booking.types';
+import type { BookingQueryParams, BookingPaginationResponse } from '../types/booking.types';
+
+const EMPTY: BookingPaginationResponse = { data: [], total: 0, page: 1, limit: 10, pages: 0 };
 
 export function useBookingData(query?: BookingQueryParams) {
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['bookings', 'user', query],
+    queryKey: ['bookings', 'list', query],
     queryFn: () => BookingAPI.getUserBookings(query),
   });
-  return { data: data ?? { data: [], total: 0, page: 1, limit: 10, pages: 0 }, isLoading, isError, refetch };
+  return { data: data ?? EMPTY, isLoading, isError, refetch };
 }
 
-export function useAllBookings(query?: BookingQueryParams) {
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['bookings', 'all', query],
-    queryFn: () => BookingAPI.getAllBookings(query),
-  });
-  return { data: data ?? { data: [], total: 0, page: 1, limit: 10, pages: 0 }, isLoading, isError, refetch };
-}
+// Alias — both hit GET /bookings
+export const useAllBookings = useBookingData;
 
 export function useBookingById(id: string | null) {
   const { data, isLoading, isError } = useQuery({

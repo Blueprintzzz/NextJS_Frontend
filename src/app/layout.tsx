@@ -3,7 +3,7 @@ import { Providers } from '@/components/shared/Providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'sberry',
+  title: 'TFX',
   description: 'Employee engagement and workforce management',
 };
 

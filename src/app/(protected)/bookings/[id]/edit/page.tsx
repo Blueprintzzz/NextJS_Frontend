@@ -3,13 +3,10 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { usePermissions } from '@/features/permissions';
 import { EditBookingForm } from '@/features/booking';
 
 export default function EditBookingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { loading } = usePermissions();
-  if (loading) return null;
 
   return (
     <div className="p-8 max-w-2xl mx-auto">

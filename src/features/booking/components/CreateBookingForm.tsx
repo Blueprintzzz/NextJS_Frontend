@@ -15,7 +15,9 @@ interface CreateBookingFormProps {
   onCancel?: () => void;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const today = new Date().toISOString().split('T')[0];
+const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
 const STEPS = ['Tour & Vehicle', 'Dates & Passengers', 'Passenger Details', 'Review & Submit'];
 
@@ -36,12 +38,16 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (step === 0 && !tourPackageId.trim()) e.tourPackageId = 'Tour package ID is required';
+    if (step === 0) {
+      if (!tourPackageId.trim()) e.tourPackageId = 'Tour package ID is required';
+      else if (!UUID_RE.test(tourPackageId.trim())) e.tourPackageId = 'Must be a valid UUID (e.g. a1b2c3d4-e5f6-7890-abcd-ef1234567890)';
+      if (vehicleId && !UUID_RE.test(vehicleId.trim())) e.vehicleId = 'Must be a valid UUID';
+    }
     if (step === 1) {
       if (!startDate) e.startDate = 'Start date required';
       if (!endDate) e.endDate = 'End date required';
       if (startDate && endDate && startDate >= endDate) e.endDate = 'End date must be after start date';
-      if (startDate && startDate < today) e.startDate = 'Start date must be today or later';
+      if (startDate && startDate < tomorrow) e.startDate = 'Start date must be in the future';
       if (numberOfPassengers < 1) e.numberOfPassengers = 'At least 1 passenger required';
     }
     setErrors(e);
@@ -58,8 +64,8 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
     const payload: CreateBookingInput = {
       tourPackageId,
       vehicleId: vehicleId || undefined,
-      startDate,
-      endDate,
+      startDate: new Date(startDate + 'T12:00:00.000Z').toISOString(),
+      endDate: new Date(endDate + 'T12:00:00.000Z').toISOString(),
       numberOfPassengers,
       advancePayment: advancePayment ? parseFloat(advancePayment) : undefined,
       specialRequests: specialRequests || undefined,
@@ -97,6 +103,7 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
               <div>
                 <label className="text-sm font-medium">Vehicle ID (optional)</label>
                 <Input value={vehicleId} onChange={(e) => setVehicleId(e.target.value)} placeholder="Vehicle ID" />
+                {errors.vehicleId && <p className="text-xs text-red-500 mt-1">{errors.vehicleId}</p>}
               </div>
             </>
           )}
@@ -105,12 +112,12 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
             <>
               <div>
                 <label className="text-sm font-medium">Start Date *</label>
-                <Input type="date" value={startDate} min={today} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="date" value={startDate} min={tomorrow} onChange={(e) => setStartDate(e.target.value)} />
                 {errors.startDate && <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>}
               </div>
               <div>
                 <label className="text-sm font-medium">End Date *</label>
-                <Input type="date" value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} />
+                <Input type="date" value={endDate} min={startDate || tomorrow} onChange={(e) => setEndDate(e.target.value)} />
                 {errors.endDate && <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>}
               </div>
               <div>

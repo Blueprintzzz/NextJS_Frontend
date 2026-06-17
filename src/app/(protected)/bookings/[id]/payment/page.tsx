@@ -5,16 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { usePermissions } from '@/features/permissions';
 import { useBookingById, PaymentForm, formatCurrency } from '@/features/booking';
 
 export default function RecordPaymentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { loading } = usePermissions();
   const { data: booking, isLoading } = useBookingById(id);
 
-  if (loading || isLoading) return null;
+  if (isLoading) return null;
   if (!booking) return <p className="p-8 text-sm text-red-600">Booking not found.</p>;
 
   return (

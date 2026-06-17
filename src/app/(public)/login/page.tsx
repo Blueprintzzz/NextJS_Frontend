@@ -3,22 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store/hooks';
-import { setUser, setToken, setOrgs } from '@/store/slices/userSlice';
-import { authApi } from '@/lib/api';
-import { isSuperAdmin, decodeTokenPayload } from '@/features/auth/utils/authUtils';
+import { setUser, setToken } from '@/store/slices/userSlice';
 import { localStorageSetJSON } from '@/lib/utils/localStorage';
-
-interface LoginResponseData {
-  tokens?: { accessToken?: string };
-  token?: string;
-  role?: string;
-  email?: string;
-  isSuperAdmin?: boolean;
-  organizations?: unknown[];
-  currentOrg?: { orgId: string; name: string; role: string };
-  orgId?: string;
-  [key: string]: unknown;
-}
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('');
@@ -34,41 +20,16 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    try {
-      const response = (await authApi.login({ email, password })) as
-        | { data?: LoginResponseData }
-        | LoginResponseData;
-
-      const data: LoginResponseData =
-        (response as { data?: LoginResponseData }).data ?? (response as LoginResponseData);
-
-      const token = data.tokens?.accessToken ?? data.token ?? '';
-      const payload = token ? decodeTokenPayload(token) : null;
-
-      const userDataWithBaseToken = {
-        ...data,
-        baseToken: token,
-        token,
-        tokens: data.tokens ?? { accessToken: token },
-        isAuthenticated: true,
-      };
-
-      localStorageSetJSON('user', userDataWithBaseToken);
-      dispatch(setUser(userDataWithBaseToken));
-      if (token) dispatch(setToken(token));
-      if (Array.isArray(data.organizations)) dispatch(setOrgs(data.organizations as never[]));
-
-      const superAdmin = isSuperAdmin(
-        { role: data.role, email: data.email, isSuperAdmin: data.isSuperAdmin },
-        payload
-      );
-
-      router.replace(superAdmin ? '/admin/orgs' : '/');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setLoading(false);
-    }
+    // --- DEV BYPASS: skip API, write a fake session and redirect ---
+    const fakeToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+      btoa(JSON.stringify({ sub: '1', email, exp: Math.floor(Date.now() / 1000) + 86400 })).replace(/=/g, '') +
+      '.fake';
+    const fakeUser = { email, token: fakeToken, baseToken: fakeToken, tokens: { accessToken: fakeToken }, isAuthenticated: true };
+    localStorageSetJSON('user', fakeUser);
+    dispatch(setUser(fakeUser));
+    dispatch(setToken(fakeToken));
+    router.replace('/bookings');
   }
 
   return (
