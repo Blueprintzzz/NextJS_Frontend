@@ -176,7 +176,7 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={step === 0 ? onCancel : back}>
+        <Button variant="secondary" onClick={step === 0 ? onCancel : back}>
           {step === 0 ? 'Cancel' : 'Back'}
         </Button>
         {step < STEPS.length - 1 ? (
