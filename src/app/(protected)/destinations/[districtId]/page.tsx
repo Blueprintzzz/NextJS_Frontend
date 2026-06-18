@@ -1,14 +1,16 @@
 'use client';
 
+import { use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDistrictById } from '@/features/destination';
 import { DistrictDetail } from '@/features/destination';
 import { PackageList } from '@/features/package';
 
-export default function DistrictDetailPage({ params }: { params: { districtId: string } }) {
+export default function DistrictDetailPage({ params }: { params: Promise<{ districtId: string }> }) {
+  const { districtId } = use(params);
   const router = useRouter();
-  const { data: district, isLoading } = useDistrictById(params.districtId);
+  const { data: district, isLoading } = useDistrictById(districtId);
 
   if (isLoading) {
     return (

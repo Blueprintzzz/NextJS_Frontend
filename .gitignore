@@ -31,6 +31,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files — commit the template, never the real values
+.env
 .env.local
 .env*.local
 # keep .env.local.template committed

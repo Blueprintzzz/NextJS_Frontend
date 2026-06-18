@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AttractionList } from '@/features/destination';
@@ -13,11 +14,12 @@ const TOUR_TO_ATTRACTION: Partial<Record<string, AttractionCategory>> = {
   cultural: 'TEMPLE',
 };
 
-export default function CategoryPage({ params }: { params: { category: string } }) {
+export default function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category: categoryParam } = use(params);
   const router = useRouter();
-  const displayName = params.category.charAt(0).toUpperCase() + params.category.slice(1).toLowerCase();
-  const pkgCategory = params.category.toUpperCase() as PackageCategory;
-  const attractionCat = TOUR_TO_ATTRACTION[params.category] as AttractionCategory | undefined;
+  const displayName = categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1).toLowerCase();
+  const pkgCategory = categoryParam.toUpperCase() as PackageCategory;
+  const attractionCat = TOUR_TO_ATTRACTION[categoryParam] as AttractionCategory | undefined;
 
   const { data: packages, isLoading: pkgsLoading } = usePackagesByCategory(pkgCategory);
 

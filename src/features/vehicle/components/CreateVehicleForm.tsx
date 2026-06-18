@@ -12,7 +12,7 @@ import type { CreateVehicleInput, VehicleType, VehicleStatus } from '../types/ve
 const TYPES: VehicleType[] = ['CAR', 'SUV', 'VAN', 'MINIBUS', 'LUXURY'];
 
 const EMPTY: CreateVehicleInput = {
-  name: '', type: 'CAR', capacity: 4, pricePerDay: 0,
+  name: '', registrationNumber: '', type: 'CAR', capacity: 4, pricePerDay: 0,
   images: [], features: [], description: '', status: 'ACTIVE',
 };
 
@@ -36,6 +36,10 @@ export function CreateVehicleForm() {
           <div>
             <label className="text-sm font-medium">Name *</label>
             <Input value={form.name} onChange={(e) => set('name', e.target.value)} required />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Registration Number *</label>
+            <Input value={form.registrationNumber} onChange={(e) => set('registrationNumber', e.target.value)} placeholder="e.g. WP CAB-1234" required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

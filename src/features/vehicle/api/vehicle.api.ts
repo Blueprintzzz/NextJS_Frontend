@@ -18,6 +18,10 @@ export const VehicleAPI = {
   async getVehicles(filters?: VehicleFilters): Promise<Vehicle[]> {
     try {
       const raw = await apiRequest(`/vehicles${buildQuery(filters as Record<string, unknown>)}`);
+      // Unwrap { success, data } envelope if present, else treat as plain array
+      if (raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)) {
+        return (raw as { data: Vehicle[] }).data;
+      }
       return Array.isArray(raw) ? (raw as Vehicle[]) : [];
     } catch {
       return [];
@@ -26,7 +30,11 @@ export const VehicleAPI = {
 
   async getVehicleById(id: string): Promise<Vehicle | null> {
     try {
-      return (await apiRequest(`/vehicles/${id}`)) as Vehicle;
+      const raw = await apiRequest(`/vehicles/${id}`);
+      if (raw && typeof raw === 'object' && 'data' in raw) {
+        return (raw as { data: Vehicle }).data;
+      }
+      return raw as Vehicle;
     } catch {
       return null;
     }
@@ -42,6 +50,9 @@ export const VehicleAPI = {
         method: 'POST',
         body: JSON.stringify({ startDate, endDate, vehicleType }),
       });
+      if (raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)) {
+        return (raw as { data: AvailabilityResult[] }).data;
+      }
       return Array.isArray(raw) ? (raw as AvailabilityResult[]) : [];
     } catch {
       return [];
@@ -54,9 +65,13 @@ export const VehicleAPI = {
     tripDays: number,
   ): Promise<Vehicle | null> {
     try {
-      return (await apiRequest(
+      const raw = await apiRequest(
         `/vehicles/recommendations?numberOfTravelers=${numberOfTravelers}&budget=${budget}&tripDays=${tripDays}`,
-      )) as Vehicle;
+      );
+      if (raw && typeof raw === 'object' && 'data' in raw) {
+        return (raw as { data: Vehicle }).data;
+      }
+      return raw as Vehicle;
     } catch {
       return null;
     }

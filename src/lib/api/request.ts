@@ -13,7 +13,7 @@
  *   - On success: returns parsed JSON
  */
 
-import { API_BASE_URL } from './config';
+import { API_URL } from './config';
 import { buildJsonHeaders } from './headers';
 import { ApiError, parseErrorResponse } from './errors';
 import { getAuthToken, updateActiveToken } from './storeContext';
@@ -33,7 +33,8 @@ export async function apiRequest(
   options: RequestInit = {},
   retryWithBaseToken = true
 ): Promise<unknown> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${API_URL}${endpoint}`;
+  console.log(`[apiRequest] ${options.method ?? 'GET'} ${url}`);
 
   const headers = buildJsonHeaders(
     endpoint,

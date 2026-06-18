@@ -6,11 +6,15 @@ import { VehicleAPI } from '../api/vehicle.api';
 import type { VehicleFilters, CreateVehicleInput, VehicleType } from '../types/vehicle.types';
 
 export function useVehicles(filters?: VehicleFilters) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ['vehicles', 'list', filters],
-    queryFn: () => VehicleAPI.getVehicles(filters),
+    queryFn: async () => {
+      const result = await VehicleAPI.getVehicles(filters);
+      console.log('[useVehicles] raw API response:', result);
+      return result;
+    },
   });
-  return { data: data ?? [], isLoading, isError };
+  return { data: data ?? [], isLoading, isFetching, isError };
 }
 
 export function useVehicleById(id: string | null) {

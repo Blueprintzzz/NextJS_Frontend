@@ -15,7 +15,7 @@ interface Props {
 
 export function VehicleList({ onSelect, totalDays }: Props) {
   const [type, setType] = useState<VehicleType | undefined>();
-  const { data, isLoading } = useVehicles(type ? { type } : undefined);
+  const { data, isLoading, isFetching, isError } = useVehicles(type ? { type } : undefined);
 
   return (
     <div className="space-y-4">
@@ -36,7 +36,12 @@ export function VehicleList({ onSelect, totalDays }: Props) {
           </button>
         ))}
       </div>
-      {isLoading ? (
+      {isError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+          Failed to load vehicles. Please try again.
+        </p>
+      )}
+      {isLoading || isFetching ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-64 rounded-lg bg-gray-100 animate-pulse" />

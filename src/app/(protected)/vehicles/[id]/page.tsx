@@ -1,14 +1,16 @@
 'use client';
 
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVehicleById, useDeleteVehicle, VehicleDetail } from '@/features/vehicle';
 import { useAppSelector } from '@/store/hooks';
 
-export default function VehicleDetailPage({ params }: { params: { id: string } }) {
+export default function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const role = useAppSelector((s) => s.user.role);
   const isAdmin = role === 'ADMIN';
-  const { data: vehicle, isLoading } = useVehicleById(params.id);
+  const { data: vehicle, isLoading } = useVehicleById(id);
   const deleteMutation = useDeleteVehicle();
 
   if (isLoading) {
@@ -41,7 +43,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
         {isAdmin && (
           <div className="flex gap-2">
             <button
-              onClick={() => router.push(`/admin/vehicles/${vehicle.id}/edit`)}
+              onClick={() => router.push(`/admin/vehicles/${id}/edit`)}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Edit

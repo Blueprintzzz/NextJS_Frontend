@@ -1,13 +1,15 @@
 'use client';
 
+import { use } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AttractionList, CategoryFilter, useDistrictById } from '@/features/destination';
 import type { AttractionCategory } from '@/features/destination';
 
-export default function DistrictAttractionsPage({ params }: { params: { districtId: string } }) {
+export default function DistrictAttractionsPage({ params }: { params: Promise<{ districtId: string }> }) {
+  const { districtId } = use(params);
   const router = useRouter();
-  const { data: district } = useDistrictById(params.districtId);
+  const { data: district } = useDistrictById(districtId);
   const [category, setCategory] = useState<AttractionCategory | undefined>();
 
   return (
@@ -19,7 +21,7 @@ export default function DistrictAttractionsPage({ params }: { params: { district
         {district ? `${district.name} — All Attractions` : 'All Attractions'}
       </h1>
       <CategoryFilter selected={category} onChange={setCategory} />
-      <AttractionList districtId={params.districtId} category={category} paginated />
+      <AttractionList districtId={districtId} category={category} paginated />
     </div>
   );
 }

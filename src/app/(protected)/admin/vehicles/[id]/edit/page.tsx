@@ -1,9 +1,11 @@
 'use client';
 
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { EditVehicleForm } from '@/features/vehicle';
 
-export default function AdminEditVehiclePage({ params }: { params: { id: string } }) {
+export default function AdminEditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
 
   return (
@@ -12,7 +14,7 @@ export default function AdminEditVehiclePage({ params }: { params: { id: string 
         ← Back
       </button>
       <h1 className="text-2xl font-bold text-gray-900">Edit Vehicle</h1>
-      <EditVehicleForm id={params.id} />
+      <EditVehicleForm id={id} />
     </div>
   );
 }
