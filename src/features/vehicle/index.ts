@@ -36,7 +36,7 @@ export type {
   VehicleType,
   VehicleStatus,
   VehicleFilters,
-  VehicleAvailability,
+  VehicleAvailability as VehicleAvailabilityType,
   CheckAvailabilityInput,
   AvailabilityResult,
   CreateVehicleInput,
