@@ -39,6 +39,15 @@ export const BookingAPI = {
     }
   },
 
+  async getMyBookings(query?: BookingQueryParams): Promise<BookingPaginationResponse> {
+    try {
+      const raw = await apiRequest(`/bookings/user${buildQuery(query)}`);
+      return (raw as BookingPaginationResponse) ?? EMPTY_PAGE;
+    } catch {
+      return EMPTY_PAGE;
+    }
+  },
+
   async getBookingById(id: string): Promise<Booking | null> {
     try {
       return (await apiRequest(`/bookings/${id}`)) as Booking;

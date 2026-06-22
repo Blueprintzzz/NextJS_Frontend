@@ -11,6 +11,7 @@ export { ApiError } from './errors';
 
 // Framework domains
 export { authApi } from './domains/auth';
+export { healthApi } from './domains/health';
 
 // Feature domains — add yours here
 // export { exampleApi } from './domains/example';

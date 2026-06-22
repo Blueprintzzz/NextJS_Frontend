@@ -5,7 +5,6 @@ import type {
   InquiryPaginationResponse,
   InquiryResponse,
   CreateInquiryInput,
-  InquiryStatus,
 } from '../types/inquiry.types';
 
 const EMPTY_PAGE: InquiryPaginationResponse = { data: [], total: 0, page: 1, limit: 10, pages: 0 };
@@ -36,11 +35,15 @@ export const InquiryAPI = {
     }) as Promise<Inquiry>;
   },
 
-  async updateInquiryStatus(id: string, status: InquiryStatus): Promise<Inquiry> {
-    return apiRequest(`/inquiries/${id}/status`, {
+  async updateInquiry(id: string, data: Record<string, unknown>): Promise<Inquiry> {
+    return apiRequest(`/inquiries/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(data),
     }) as Promise<Inquiry>;
+  },
+
+  async deleteInquiry(id: string): Promise<void> {
+    await apiRequest(`/inquiries/${id}`, { method: 'DELETE' });
   },
 
   async respondInquiry(id: string, message: string): Promise<InquiryResponse> {

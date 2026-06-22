@@ -27,7 +27,6 @@ export { ReviewAPI } from './api/review.api';
 export type {
   Review,
   ReviewStatus,
-  ReviewStats,
   ReviewFilters,
   ReviewPaginationResponse,
   CreateReviewInput,

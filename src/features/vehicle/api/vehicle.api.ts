@@ -94,4 +94,25 @@ export const VehicleAPI = {
   async deleteVehicle(id: string): Promise<void> {
     await apiRequest(`/vehicles/${id}`, { method: 'DELETE' });
   },
+
+  async getVehiclesByType(type: string): Promise<Vehicle[]> {
+    try {
+      const raw = await apiRequest(`/vehicles/type/${type}`);
+      if (raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)) {
+        return (raw as { data: Vehicle[] }).data;
+      }
+      return Array.isArray(raw) ? (raw as Vehicle[]) : [];
+    } catch { return []; }
+  },
+
+  async getVehicleAvailability(id: string): Promise<unknown> {
+    try { return await apiRequest(`/vehicles/${id}/availability`); } catch { return null; }
+  },
+
+  async reserveVehicle(id: string, data: Record<string, unknown>): Promise<unknown> {
+    return apiRequest(`/vehicles/${id}/reserve`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };

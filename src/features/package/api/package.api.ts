@@ -70,4 +70,33 @@ export const PackageAPI = {
   async deletePackage(id: string): Promise<void> {
     await apiRequest(`/packages/${id}`, { method: 'DELETE' });
   },
+
+  async addItineraryDay(id: string, data: Record<string, unknown>): Promise<TourPackage> {
+    return apiRequest(`/packages/${id}/itinerary`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }) as Promise<TourPackage>;
+  },
+
+  async updateItineraryDay(id: string, day: number, data: Record<string, unknown>): Promise<TourPackage> {
+    return apiRequest(`/packages/${id}/itinerary/${day}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }) as Promise<TourPackage>;
+  },
+
+  async updateInclusions(id: string, data: Record<string, unknown>): Promise<TourPackage> {
+    return apiRequest(`/packages/${id}/inclusions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }) as Promise<TourPackage>;
+  },
+
+  async featurePackage(id: string): Promise<TourPackage> {
+    return apiRequest(`/packages/${id}/feature`, { method: 'POST' }) as Promise<TourPackage>;
+  },
+
+  async deactivatePackage(id: string): Promise<TourPackage> {
+    return apiRequest(`/packages/${id}/deactivate`, { method: 'POST' }) as Promise<TourPackage>;
+  },
 };

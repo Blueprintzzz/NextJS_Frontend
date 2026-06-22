@@ -3,7 +3,6 @@ import type {
   Review,
   ReviewFilters,
   ReviewPaginationResponse,
-  ReviewStats,
   CreateReviewInput,
 } from '../types/review.types';
 
@@ -30,22 +29,18 @@ export const ReviewAPI = {
 
   async getPackageReviews(packageId: string, page = 1): Promise<ReviewPaginationResponse> {
     try {
-      return (await apiRequest(`/reviews?packageId=${packageId}&page=${page}`)) as ReviewPaginationResponse ?? EMPTY_PAGE;
+      return (await apiRequest(`/packages/${packageId}/reviews?page=${page}`)) as ReviewPaginationResponse ?? EMPTY_PAGE;
     } catch { return EMPTY_PAGE; }
-  },
-
-  async getPackageReviewStats(packageId: string): Promise<ReviewStats | null> {
-    try { return (await apiRequest(`/reviews/stats?packageId=${packageId}`)) as ReviewStats; } catch { return null; }
   },
 
   async getUserReviews(userId: string): Promise<ReviewPaginationResponse> {
     try {
-      return (await apiRequest(`/reviews?userId=${userId}`)) as ReviewPaginationResponse ?? EMPTY_PAGE;
+      return (await apiRequest(`/users/${userId}/reviews`)) as ReviewPaginationResponse ?? EMPTY_PAGE;
     } catch { return EMPTY_PAGE; }
   },
 
-  async createReview(bookingId: string, data: CreateReviewInput): Promise<Review> {
-    return apiRequest(`/bookings/${bookingId}/review`, {
+  async createReview(data: CreateReviewInput): Promise<Review> {
+    return apiRequest('/reviews', {
       method: 'POST',
       body: JSON.stringify(data),
     }) as Promise<Review>;

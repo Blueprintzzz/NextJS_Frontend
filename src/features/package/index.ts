@@ -28,9 +28,7 @@ export type {
   TourPackage,
   PackageCategory,
   PackageStatus,
-  PackageItinerary,
   PackageInclusion,
-  PackageFilters,
   PackagePaginationResponse,
   CreatePackageInput,
 } from './types/package.types';

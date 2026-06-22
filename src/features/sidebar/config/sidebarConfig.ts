@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Mail } from 'lucide-react';
+import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Mail, Package, Star, MessageSquare, ShieldCheck, UserCircle } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -21,6 +21,14 @@ export const sidebarGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'Packages',
+    items: [
+      { label: 'All Packages', href: '/packages', icon: Package },
+      { label: 'Featured Packages', href: '/packages/featured', icon: Star },
+      { label: 'Create Package', href: '/packages/create', icon: PlusCircle },
+    ],
+  },
+  {
     label: 'Vehicles',
     items: [
       { label: 'Browse Vehicles', href: '/vehicles', icon: Car },
@@ -33,6 +41,20 @@ export const sidebarGroups: NavGroup[] = [
       { label: 'Explore Map', href: '/map', icon: Map },
       { label: 'All Districts', href: '/destinations', icon: MapPin },
       { label: 'Categories', href: '/categories', icon: LayoutGrid },
+    ],
+  },
+  {
+    label: 'Reviews',
+    items: [
+      { label: 'All Reviews', href: '/reviews', icon: Star },
+      { label: 'My Reviews', href: '/account/reviews', icon: UserCircle },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { label: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
+      { label: 'Reviews', href: '/admin/reviews', icon: ShieldCheck },
     ],
   },
   {

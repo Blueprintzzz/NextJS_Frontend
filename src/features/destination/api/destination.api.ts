@@ -47,6 +47,10 @@ export const DestinationAPI = {
     await apiRequest(`/districts/${id}`, { method: 'DELETE' });
   },
 
+  async setDistrictFeatured(id: string): Promise<District> {
+    return apiRequest(`/districts/${id}/featured`, { method: 'POST' }) as Promise<District>;
+  },
+
   // Attractions
   async getAttractions(filters?: AttractionFilters): Promise<Attraction[]> {
     try {
@@ -98,5 +102,13 @@ export const DestinationAPI = {
       const raw = await apiRequest('/categories');
       return Array.isArray(raw) ? (raw as TourCategory[]) : [];
     } catch { return []; }
+  },
+
+  async getCategoryBySlug(category: string): Promise<TourCategory | null> {
+    try { return (await apiRequest(`/categories/${category}`)) as TourCategory; } catch { return null; }
+  },
+
+  async createCategory(data: Partial<TourCategory>): Promise<TourCategory> {
+    return apiRequest('/categories', { method: 'POST', body: JSON.stringify(data) }) as Promise<TourCategory>;
   },
 };
