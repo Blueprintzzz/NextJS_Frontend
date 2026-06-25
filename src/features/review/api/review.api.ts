@@ -39,10 +39,10 @@ export const ReviewAPI = {
     } catch { return EMPTY_PAGE; }
   },
 
-  async createReview(data: CreateReviewInput): Promise<Review> {
+  async createReview(bookingId: string, data: CreateReviewInput): Promise<Review> {
     return apiRequest('/reviews', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, bookingId }),
     }) as Promise<Review>;
   },
 
@@ -55,6 +55,10 @@ export const ReviewAPI = {
 
   async deleteReview(id: string): Promise<void> {
     await apiRequest(`/reviews/${id}`, { method: 'DELETE' });
+  },
+
+  async getPackageReviewStats(packageId: string): Promise<{ avgRating: number; totalReviews: number; ratingDistribution: Record<number, number> } | null> {
+    try { return (await apiRequest(`/packages/${packageId}/reviews/stats`)) as { avgRating: number; totalReviews: number; ratingDistribution: Record<number, number> }; } catch { return null; }
   },
 
   async approveReview(id: string): Promise<Review> {

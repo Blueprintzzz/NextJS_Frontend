@@ -20,14 +20,14 @@ export function ReviewCard({ review }: Props) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             {review.userAvatar ? (
-              <Image src={review.userAvatar} alt={review.userName} width={32} height={32} className="rounded-full object-cover" />
+              <Image src={review.userAvatar} alt={review.userId} width={32} height={32} className="rounded-full object-cover" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
-                {review.userName[0]?.toUpperCase()}
+                {review.userId?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-gray-900">{review.userName}</p>
+              <p className="text-sm font-medium text-gray-900">{review.userId}</p>
               <p className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</p>
             </div>
           </div>

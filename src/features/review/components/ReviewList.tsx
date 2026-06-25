@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ReviewCard } from './ReviewCard';
-import { usePackageReviews } from '../hooks/useReviews';
+import { useReviews, usePackageReviews } from '../hooks/useReviews';
+import type { ReviewFilters } from '../types/review.types';
 
 interface Props {
-  packageId: string;
+  packageId?: string;
+  filters?: ReviewFilters;
 }
 
-export function ReviewList({ packageId }: Props) {
+export function ReviewList({ packageId, filters }: Props) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = usePackageReviews(packageId, page);
+  const packageResult = usePackageReviews(packageId ?? null, page);
+  const allResult = useReviews({ ...filters, page });
+  const { data, isLoading, isError } = packageId ? packageResult : allResult;
 
   if (isError) return <p className="text-sm text-red-600">Failed to load reviews.</p>;
 
