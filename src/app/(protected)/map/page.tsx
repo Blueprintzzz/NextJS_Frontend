@@ -9,7 +9,7 @@ const LeafletMap = dynamic(
 
 export default function MapPage() {
   return (
-    <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <LeafletMap />
     </div>
   );

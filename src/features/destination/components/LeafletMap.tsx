@@ -258,6 +258,11 @@ const S = {
   },
 };
 
+// ─── Leaflet window type ─────────────────────────────────────────────────────
+
+type LeafletLib = typeof import('leaflet');
+type WindowWithLeaflet = Window & typeof globalThis & { L?: LeafletLib };
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function LeafletMap() {
@@ -298,7 +303,7 @@ export function LeafletMap() {
   }, []);
 
   // ── Init Leaflet ─────────────────────────────────────────────────────────
-  const initMap = useCallback((L: typeof window.L) => {
+  const initMap = useCallback((L: LeafletLib) => {
     if (leafletMap.current || !mapRef.current) return;
     const map = L.map(mapRef.current, { center: [7.8731, 80.7718], zoom: 8, zoomControl: false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -312,8 +317,8 @@ export function LeafletMap() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if ((window as typeof window & { L?: unknown }).L) {
-      initMap((window as typeof window & { L: typeof window.L }).L);
+    if ((window as WindowWithLeaflet).L) {
+      initMap((window as WindowWithLeaflet).L!);
       return;
     }
     const link = document.createElement('link');
@@ -322,13 +327,13 @@ export function LeafletMap() {
     document.head.appendChild(link);
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-    script.onload = () => initMap((window as typeof window & { L: typeof window.L }).L);
+    script.onload = () => initMap((window as WindowWithLeaflet).L!);
     document.head.appendChild(script);
   }, [initMap]);
 
   // ── Render markers whenever data/filters change ──────────────────────────
   useEffect(() => {
-    const L = (window as typeof window & { L?: typeof window.L }).L;
+    const L = (window as WindowWithLeaflet).L;
     const layer = markerLayerRef.current as { clearLayers: () => void; addLayer: (m: unknown) => void } | null;
     if (!L || !layer || !mapData || !mapReady) return;
 
