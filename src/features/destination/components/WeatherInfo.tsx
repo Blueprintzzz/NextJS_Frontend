@@ -18,12 +18,14 @@ export function WeatherInfo({ weather }: Props) {
       </div>
       <div className="flex items-center gap-2 text-gray-600">
         <CloudRain className="w-4 h-4 text-sky-400" />
-        <span>{weather.rainfall}</span>
+        <span>{weather.rainfall ?? weather.condition ?? '—'}</span>
       </div>
-      <div className="flex items-center gap-2 text-gray-600">
-        <CalendarDays className="w-4 h-4 text-green-500" />
-        <span>{weather.bestMonths.join(', ')}</span>
-      </div>
+      {weather.bestMonths && weather.bestMonths.length > 0 && (
+        <div className="flex items-center gap-2 text-gray-600">
+          <CalendarDays className="w-4 h-4 text-green-500" />
+          <span>{weather.bestMonths.join(', ')}</span>
+        </div>
+      )}
     </div>
   );
 }

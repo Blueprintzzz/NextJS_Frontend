@@ -2,10 +2,11 @@ export type AttractionCategory = 'TEMPLE' | 'BEACH' | 'MOUNTAIN' | 'WATERFALL' |
 export type TourCategoryName = 'ADVENTURE' | 'NATURE' | 'ROMANTIC' | 'WILDLIFE' | 'FAMILY' | 'CULTURAL' | 'BEACH' | 'LUXURY';
 
 export interface WeatherInfo {
-  temperature: string;
-  humidity: string;
-  rainfall: string;
-  bestMonths: string[];
+  temperature?: string;
+  humidity?: string;
+  rainfall?: string;
+  condition?: string;
+  bestMonths?: string[];
 }
 
 export interface Attraction {
@@ -21,6 +22,20 @@ export interface Attraction {
   longitude: number;
   openingHours?: string;
   entryFee: number;
+  district?: { name: string };
+}
+
+export interface MapDistrict {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  featured?: boolean;
+}
+
+export interface MapData {
+  districts: MapDistrict[];
+  attractions: Attraction[];
 }
 
 export interface District {

@@ -6,6 +6,13 @@ import type {
   AttractionFilters,
 } from '../types/destination.types';
 
+interface Paginated<T> { data: T[]; total: number; page: number; limit: number; pages: number; }
+function extractList<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (raw && typeof raw === 'object' && Array.isArray((raw as Paginated<T>).data)) return (raw as Paginated<T>).data;
+  return [];
+}
+
 function buildQuery(params?: Record<string, unknown>): string {
   if (!params) return '';
   const q = new URLSearchParams();
@@ -18,8 +25,8 @@ export const DestinationAPI = {
   // Districts
   async getDistricts(search?: string): Promise<District[]> {
     try {
-      const raw = await apiRequest(`/districts${buildQuery(search ? { search } : undefined)}`);
-      return Array.isArray(raw) ? (raw as District[]) : [];
+      const raw = await apiRequest(`/districts${buildQuery({ ...(search ? { search } : {}), limit: 100 })}`);
+      return extractList<District>(raw);
     } catch { return []; }
   },
 
@@ -31,7 +38,7 @@ export const DestinationAPI = {
   async getFeaturedDistricts(): Promise<District[]> {
     try {
       const raw = await apiRequest('/districts/featured');
-      return Array.isArray(raw) ? (raw as District[]) : [];
+      return extractList<District>(raw);
     } catch { return []; }
   },
 
@@ -55,7 +62,7 @@ export const DestinationAPI = {
   async getAttractions(filters?: AttractionFilters): Promise<Attraction[]> {
     try {
       const raw = await apiRequest(`/attractions${buildQuery(filters as Record<string, unknown>)}`);
-      return Array.isArray(raw) ? (raw as Attraction[]) : [];
+      return extractList<Attraction>(raw);
     } catch { return []; }
   },
 
@@ -67,14 +74,14 @@ export const DestinationAPI = {
   async getAttractionsByCategory(category: string): Promise<Attraction[]> {
     try {
       const raw = await apiRequest(`/attractions/category/${category}`);
-      return Array.isArray(raw) ? (raw as Attraction[]) : [];
+      return extractList<Attraction>(raw);
     } catch { return []; }
   },
 
   async getAttractionsByDistrict(districtId: string): Promise<Attraction[]> {
     try {
       const raw = await apiRequest(`/attractions/district/${districtId}`);
-      return Array.isArray(raw) ? (raw as Attraction[]) : [];
+      return extractList<Attraction>(raw);
     } catch { return []; }
   },
 
@@ -100,7 +107,7 @@ export const DestinationAPI = {
   async getCategories(): Promise<TourCategory[]> {
     try {
       const raw = await apiRequest('/categories');
-      return Array.isArray(raw) ? (raw as TourCategory[]) : [];
+      return extractList<TourCategory>(raw);
     } catch { return []; }
   },
 

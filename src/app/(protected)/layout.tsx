@@ -13,9 +13,9 @@ export default function ProtectedLayout({
 }) {
   return (
     <AuthBootstrap>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex h-screen overflow-hidden bg-gray-50">
         <FeatureSidebar />
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 h-full overflow-hidden">
           {children}
         </main>
       </div>
