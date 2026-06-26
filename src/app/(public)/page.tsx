@@ -1,0 +1,158 @@
+'use client';
+
+import { HeroSection } from '@/components/public/sections/HeroSection';
+import { FeaturedDestinations } from '@/components/public/sections/FeaturedDestinations';
+import { WhyChooseUs } from '@/components/public/sections/WhyChooseUs';
+import { StatsSection } from '@/components/public/sections/StatsSection';
+import { TestimonialCarousel } from '@/components/public/sections/TestimonialCarousel';
+import { CTASection } from '@/components/public/sections/CTASection';
+import { NewsletterSection } from '@/components/public/sections/NewsletterSection';
+import { TrustIndicators } from '@/components/public/sections/TrustIndicators';
+import { TourCard } from '@/components/public/cards/TourCard';
+import { useFeaturedDistricts } from '@/features/destination';
+import { useFeaturedPackages } from '@/features/package';
+
+const heroSlides = [
+  {
+    image: 'https://picsum.photos/1920/1080?random=hero1',
+    title: 'Where Dreams Take Flight',
+    subtitle: 'Your Home, Your Journey, Your Hospitality Haven',
+    ctaText: 'Explore Destinations',
+    ctaLink: '/destinations',
+    secondaryCtaText: 'Book Now',
+    secondaryCtaLink: '/tours',
+  },
+  {
+    image: 'https://picsum.photos/1920/1080?random=hero2',
+    title: 'Crafting Journeys, Forging Memories',
+    subtitle: 'Discover the breathtaking beauty of Sri Lanka with our expert guides',
+    ctaText: 'See Our Tours',
+    ctaLink: '/tours',
+    secondaryCtaText: 'Learn More',
+    secondaryCtaLink: '/about-us',
+  },
+  {
+    image: 'https://picsum.photos/1920/1080?random=hero3',
+    title: 'An Island Of Wonder',
+    subtitle: 'From misty mountains to golden shores — experience it all',
+    ctaText: 'Start Exploring',
+    ctaLink: '/experiences',
+    secondaryCtaText: 'Contact Us',
+    secondaryCtaLink: '/contact-us',
+  },
+];
+
+function FeaturedToursSection() {
+  const { data: tours, isLoading } = useFeaturedPackages();
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Crafted Journeys, Forged Memories</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-80 rounded-2xl bg-gray-200 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const featured = tours.slice(0, 3);
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Crafted Journeys, Forged Memories
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Explore our most popular tour packages, each designed to showcase the best of Sri Lanka
+          </p>
+        </div>
+
+        {featured.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featured.map((tour) => (
+              <TourCard key={tour.id} tour={tour} href={`/tours/${tour.id}`} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl overflow-hidden shadow-md bg-white">
+                <div className="relative h-52 bg-gray-100">
+                  <img
+                    src={`https://picsum.photos/600/400?random=tour${i}`}
+                    alt="Tour"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 text-lg">Sample Tour {i}</h3>
+                  <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                    Explore the beautiful landscapes of Sri Lanka on this curated journey.
+                  </p>
+                  <a href="/tours" className="inline-block mt-3 px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="text-center mt-12">
+          <a
+            href="/tours"
+            className="inline-block px-8 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            See All Tours
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedDestinationsSection() {
+  const { data: districts, isLoading } = useFeaturedDistricts();
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Discover Sri Lanka&apos;s Wonders</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => <div key={i} className="h-64 rounded-2xl bg-gray-200 animate-pulse" />)}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return <FeaturedDestinations destinations={districts.slice(0, 3)} />;
+}
+
+export default function HomePage() {
+  return (
+    <>
+      <HeroSection slides={heroSlides} />
+      <TrustIndicators />
+      <FeaturedDestinationsSection />
+      <FeaturedToursSection />
+      <WhyChooseUs />
+      <StatsSection />
+      <TestimonialCarousel />
+      <CTASection />
+      <NewsletterSection />
+    </>
+  );
+}
