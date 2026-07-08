@@ -15,8 +15,8 @@ const quickLinks = [
 const services = [
   { href: '/destinations', label: 'Destination Guides' },
   { href: '/tours', label: 'Tour Packages' },
-  { href: '/#', label: 'Vehicle Rental' },
-  { href: '/#', label: 'Group Bookings' },
+  { href: '/vehicles', label: 'Vehicle Rental' },
+  { href: '/contact-us', label: 'Group Bookings' },
 ];
 
 export function PublicFooter() {
@@ -74,7 +74,7 @@ export function PublicFooter() {
             <h3 className="font-semibold text-lg mb-4">Services</h3>
             <ul className="space-y-2">
               {services.map((service) => (
-                <li key={service.href}>
+                <li key={service.label}>
                   <Link
                     href={service.href}
                     className="text-gray-400 hover:text-teal-400 transition-colors text-sm"

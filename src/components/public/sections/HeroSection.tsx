@@ -95,6 +95,7 @@ export function HeroSection({ slides, autoRotateInterval = 5000 }: HeroSectionPr
       {slides.length > 1 && (
         <>
           <button
+            suppressHydrationWarning
             onClick={prevSlide}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
             aria-label="Previous slide"
@@ -102,6 +103,7 @@ export function HeroSection({ slides, autoRotateInterval = 5000 }: HeroSectionPr
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
           <button
+            suppressHydrationWarning
             onClick={nextSlide}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
             aria-label="Next slide"
@@ -115,6 +117,7 @@ export function HeroSection({ slides, autoRotateInterval = 5000 }: HeroSectionPr
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
           {slides.map((_, index) => (
             <button
+              suppressHydrationWarning
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`w-2 h-2 rounded-full transition-all ${

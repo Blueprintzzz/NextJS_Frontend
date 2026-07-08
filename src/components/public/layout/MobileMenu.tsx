@@ -25,6 +25,7 @@ export function MobileMenu({ onSearchClick }: MobileMenuProps) {
   return (
     <div className="md:hidden">
       <button
+        suppressHydrationWarning
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 text-gray-600 hover:text-teal-600 transition-colors"
         aria-label="Toggle menu"
@@ -55,6 +56,7 @@ export function MobileMenu({ onSearchClick }: MobileMenuProps) {
             })}
             {onSearchClick && (
               <button
+                suppressHydrationWarning
                 onClick={() => {
                   setIsOpen(false);
                   onSearchClick();

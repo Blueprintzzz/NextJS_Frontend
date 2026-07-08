@@ -24,6 +24,7 @@ export function PublicHeader() {
 
         <div className="flex items-center gap-4">
           <button
+            suppressHydrationWarning
             className="p-2 text-gray-600 hover:text-teal-600 transition-colors"
             aria-label="Search"
           >
