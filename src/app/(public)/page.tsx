@@ -14,7 +14,7 @@ import { useFeaturedPackages } from '@/features/package';
 
 const heroSlides = [
   {
-    image: 'https://picsum.photos/1920/1080?random=hero1',
+    image: 'https://thumbs.dreamstime.com/b/sri-dalada-maligawa-temple-sacred-tooth-relic-kandy-lanka-67302862.jpg',
     title: 'Where Dreams Take Flight',
     subtitle: 'Your Home, Your Journey, Your Hospitality Haven',
     ctaText: 'Explore Destinations',
@@ -23,7 +23,7 @@ const heroSlides = [
     secondaryCtaLink: '/tours',
   },
   {
-    image: 'https://picsum.photos/1920/1080?random=hero2',
+    image: '/img/Home_1.jpeg',
     title: 'Crafting Journeys, Forging Memories',
     subtitle: 'Discover the breathtaking beauty of Sri Lanka with our expert guides',
     ctaText: 'See Our Tours',
@@ -32,7 +32,7 @@ const heroSlides = [
     secondaryCtaLink: '/about-us',
   },
   {
-    image: 'https://picsum.photos/1920/1080?random=hero3',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaczuwgS2A__U7qzOV2KCyx05pbc-5hxJFaKp7FWTh9Sdt5hKVTn6rBgs&s=10',
     title: 'An Island Of Wonder',
     subtitle: 'From misty mountains to golden shores — experience it all',
     ctaText: 'Start Exploring',
@@ -62,7 +62,7 @@ function FeaturedToursSection() {
     );
   }
 
-  const featured = tours.slice(0, 3);
+  const featured = (tours ?? []).slice(0, 3);
 
   return (
     <section className="py-20 bg-gray-50">
@@ -83,27 +83,8 @@ function FeaturedToursSection() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-2xl overflow-hidden shadow-md bg-white">
-                <div className="relative h-52 bg-gray-100">
-                  <img
-                    src={`https://picsum.photos/600/400?random=tour${i}`}
-                    alt="Tour"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 text-lg">Sample Tour {i}</h3>
-                  <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-                    Explore the beautiful landscapes of Sri Lanka on this curated journey.
-                  </p>
-                  <a href="/tours" className="inline-block mt-3 px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700">
-                    View Details
-                  </a>
-                </div>
-              </div>
-            ))}
+          <div className="text-center py-12 text-gray-500">
+            No featured tours available yet.
           </div>
         )}
 
