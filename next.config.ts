@@ -1,20 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow images from any origin during development.
-  // Tighten this to specific domains before production.
   images: {
     remotePatterns: [
+      // Production backend on Render — update hostname to match your actual Render URL
+      {
+        protocol: "https",
+        hostname: "*.onrender.com",
+      },
+      // Picsum placeholder images used during development/staging
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+      // Allow any https source as a fallback (remove this once all image
+      // domains are known and listed explicitly above)
       {
         protocol: "https",
         hostname: "**",
       },
     ],
   },
-
-  // Suppress the "missing suspense boundary" warning for useSearchParams
-  // during static generation. Protected pages are client-rendered anyway.
-  experimental: {},
 };
 
 export default nextConfig;

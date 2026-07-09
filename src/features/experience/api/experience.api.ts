@@ -1,7 +1,6 @@
+import { API_URL } from '@/lib/api/config';
 import { buildJsonHeaders } from '@/lib/api/headers';
 import type { Experience, ExperienceFilters, PaginatedExperiences } from '../types/experience.types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
 export async function getExperiences(filters?: ExperienceFilters): Promise<Experience[]> {
   try {

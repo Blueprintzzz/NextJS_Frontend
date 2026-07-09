@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { API_URL } from '@/lib/api/config';
 import { useCreateExperience, useUpdateExperience, useExperienceById } from '../hooks/useExperience';
 import type { CreateExperienceInput } from '../api/experience.api';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
 const CATEGORIES = [
   { value: 'ADVENTURE', label: 'Adventure' },
@@ -154,7 +153,7 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
             />
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => {
                 if (imageInput.trim()) {
                   set('images', [...(form.images ?? []), imageInput.trim()]);
