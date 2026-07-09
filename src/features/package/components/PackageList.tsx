@@ -8,9 +8,16 @@ import { PackageFilters } from './PackageFilters';
 import { usePackages } from '../hooks/usePackages';
 import type { PackageCategory } from '../types/package.types';
 
-const DEFAULT_FILTERS = {
+const DEFAULT_FILTERS: {
+  search: string;
+  category?: PackageCategory;
+  minPrice: string;
+  maxPrice: string;
+  minDuration: string;
+  maxDuration: string;
+} = {
   search: '',
-  category: undefined as PackageCategory | undefined,
+  category: undefined,
   minPrice: '',
   maxPrice: '',
   minDuration: '',
