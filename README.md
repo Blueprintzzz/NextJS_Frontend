@@ -18,7 +18,6 @@ cp .env.local.template .env.local
 # Fill in NEXT_PUBLIC_API_URL and Cognito values
 npm run dev
 ```
-
 ---
 
 ## Environment Variables
