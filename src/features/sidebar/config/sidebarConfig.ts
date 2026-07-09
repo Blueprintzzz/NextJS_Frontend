@@ -55,6 +55,7 @@ export const sidebarGroups: NavGroup[] = [
     items: [
       { label: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
       { label: 'Reviews', href: '/admin/reviews', icon: ShieldCheck },
+      { label: 'Experiences', href: '/admin/experiences', icon: Star },
     ],
   },
   {
