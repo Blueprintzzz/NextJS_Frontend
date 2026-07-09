@@ -47,7 +47,7 @@ export function useRespondInquiry() {
 export function useUpdateInquiryStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: InquiryStatus }) => InquiryAPI.updateInquiryStatus(id, status),
+    mutationFn: ({ id, status }: { id: string; status: InquiryStatus }) => InquiryAPI.updateInquiry(id, { status }),
     onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['inquiries', 'detail', id] });
       queryClient.invalidateQueries({ queryKey: ['inquiries', 'list'] });
