@@ -9,9 +9,10 @@ import type { ReviewFilters } from '../types/review.types';
 interface Props {
   packageId?: string;
   filters?: ReviewFilters;
+  showAdminActions?: boolean;
 }
 
-export function ReviewList({ packageId, filters }: Props) {
+export function ReviewList({ packageId, filters, showAdminActions = false }: Props) {
   const [page, setPage] = useState(1);
   const packageResult = usePackageReviews(packageId ?? null, page);
   const allResult = useReviews({ ...filters, page });
@@ -26,7 +27,7 @@ export function ReviewList({ packageId, filters }: Props) {
       ) : (
         <>
           {data.data.length === 0 && <p className="text-sm text-gray-400 text-center py-8">No reviews yet.</p>}
-          {data.data.map((r) => <ReviewCard key={r.id} review={r} />)}
+          {data.data.map((r) => <ReviewCard key={r.id} review={r} showAdminActions={showAdminActions} />)}
           {data.pages > 1 && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Page {data.page} of {data.pages}</span>

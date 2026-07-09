@@ -1,18 +1,22 @@
 'use client';
 
 import Image from 'next/image';
-import { ThumbsUp } from 'lucide-react';
+import { ThumbsUp, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { StarRating } from './StarRating';
-import { useMarkHelpful } from '../hooks/useReviews';
+import { useMarkHelpful, useDeleteReview, useApproveReview, useRejectReview } from '../hooks/useReviews';
 import type { Review } from '../types/review.types';
 
 interface Props {
   review: Review;
+  showAdminActions?: boolean;
 }
 
-export function ReviewCard({ review }: Props) {
+export function ReviewCard({ review, showAdminActions = false }: Props) {
   const markHelpful = useMarkHelpful();
+  const deleteReview = useDeleteReview();
+  const approveReview = useApproveReview();
+  const rejectReview = useRejectReview();
 
   return (
     <Card>
@@ -49,14 +53,48 @@ export function ReviewCard({ review }: Props) {
           </div>
         )}
 
-        <button
-          onClick={() => markHelpful.mutate(review.id)}
-          disabled={markHelpful.isPending}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          <ThumbsUp className="w-3.5 h-3.5" />
-          Helpful ({review.helpfulCount})
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => markHelpful.mutate(review.id)}
+            disabled={markHelpful.isPending}
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ThumbsUp className="w-3.5 h-3.5" />
+            Helpful ({review.helpfulCount})
+          </button>
+
+          {showAdminActions && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => approveReview.mutate(review.id)}
+                disabled={approveReview.isPending}
+                title="Approve"
+                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 transition-colors disabled:opacity-50"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Approve
+              </button>
+              <button
+                onClick={() => rejectReview.mutate(review.id)}
+                disabled={rejectReview.isPending}
+                title="Reject"
+                className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50"
+              >
+                <XCircle className="w-4 h-4" />
+                Reject
+              </button>
+              <button
+                onClick={() => deleteReview.mutate(review.id)}
+                disabled={deleteReview.isPending}
+                title="Delete"
+                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
