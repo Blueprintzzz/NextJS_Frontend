@@ -56,11 +56,11 @@ export function ExperienceCard({ experience }: ExperienceCardProps) {
               <Clock className="w-3.5 h-3.5 text-teal-500" />
               {experience.duration}
             </span>
-            {experience.rating && (
+            {experience.rating != null && (
               <span className="flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                {experience.rating.toFixed(1)}
-                {experience.reviewCount && (
+                {Number(experience.rating).toFixed(1)}
+                {experience.reviewCount != null && (
                   <span className="text-gray-400 text-xs">({experience.reviewCount})</span>
                 )}
               </span>
@@ -68,7 +68,7 @@ export function ExperienceCard({ experience }: ExperienceCardProps) {
           </div>
           <span className="flex items-center gap-0.5 font-semibold text-teal-600">
             <DollarSign className="w-3.5 h-3.5" />
-            {experience.price.toLocaleString()}
+            {Number(experience.price).toLocaleString()}
           </span>
         </div>
 
