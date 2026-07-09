@@ -55,7 +55,7 @@ export function formatWeatherInfo(w: WeatherInfo): string {
 }
 
 export function getWeatherRating(w: WeatherInfo): number {
-  const months = w.bestMonths.length;
+  const months = (w.bestMonths ?? []).length;
   if (months >= 8) return 5;
   if (months >= 6) return 4;
   if (months >= 4) return 3;
