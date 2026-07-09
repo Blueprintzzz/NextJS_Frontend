@@ -78,18 +78,18 @@ export default function ExperienceDetailPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
             {experience.name}
           </h1>
-          {experience.rating && (
+          {experience.rating != null && (
             <div className="flex items-center gap-2 mt-2">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4 h-4 ${i < Math.round(experience.rating!) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
+                    className={`w-4 h-4 ${i < Math.round(Number(experience.rating)) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
                   />
                 ))}
               </div>
-              <span className="text-white text-sm">{experience.rating.toFixed(1)}</span>
-              {experience.reviewCount && (
+              <span className="text-white text-sm">{Number(experience.rating).toFixed(1)}</span>
+              {experience.reviewCount != null && (
                 <span className="text-white/70 text-sm">({experience.reviewCount} reviews)</span>
               )}
             </div>

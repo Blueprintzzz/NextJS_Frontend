@@ -31,7 +31,7 @@ export default function ExperiencesPage() {
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[420px] flex items-center justify-center overflow-hidden">
         <Image
-          src="https://picsum.photos/1920/1080?random=experiences"
+          src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/15/1f/78/69.jpg"
           alt="Experiences in Sri Lanka"
           fill
           className="object-cover"
