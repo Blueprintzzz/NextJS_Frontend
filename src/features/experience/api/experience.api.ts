@@ -1,117 +1,38 @@
-'use client';
+import type { Experience, ExperienceFilters, PaginatedExperiences } from '../types/experience.types';
 
-import { useQuery } from '@tanstack/react-query';
-import type { ExperienceFilters, ExperienceCategory } from '../types/experience.types';
-import type { Experience } from '../types/experience.types';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
-const mockExperiences: Experience[] = [
-  {
-    id: '1',
-    name: 'Sigiriya Rock Climbing Adventure',
-    description: 'Scale the ancient rock fortress with professional guides and breathtaking views of the surrounding landscape.',
-    category: 'ADVENTURE',
-    duration: '2-3 hours',
-    price: 85,
-    rating: 4.8,
-    reviewCount: 156,
-    image: 'https://picsum.photos/600/400?random=exp1',
-    featured: true,
-  },
-  {
-    id: '2',
-    name: 'Whale Watching in Mirissa',
-    description: 'Early morning boat tour to spot magnificent blue whales and dolphins in their natural habitat.',
-    category: 'NATURE',
-    duration: '4-5 hours',
-    price: 120,
-    rating: 4.9,
-    reviewCount: 243,
-    image: 'https://picsum.photos/600/400?random=exp2',
-    featured: true,
-  },
-  {
-    id: '3',
-    name: 'Traditional Dance Workshop',
-    description: 'Learn the art of Sri Lankan traditional dance from local masters in a authentic setting.',
-    category: 'CULTURAL',
-    duration: '2 hours',
-    price: 45,
-    rating: 4.6,
-    reviewCount: 89,
-    image: 'https://picsum.photos/600/400?random=exp3',
-    featured: true,
-  },
-  {
-    id: '4',
-    name: 'Ayurvedic Spa Retreat',
-    description: 'Rejuvenate with authentic Ayurvedic treatments and holistic wellness therapies.',
-    category: 'RELAXATION',
-    duration: '3 hours',
-    price: 95,
-    rating: 4.7,
-    reviewCount: 178,
-    image: 'https://picsum.photos/600/400?random=exp4',
-    featured: true,
-  },
-  {
-    id: '5',
-    name: 'Elephant Orphanage Visit',
-    description: 'Meet rescued elephants and learn about conservation efforts at Pinnawala Elephant Orphanage.',
-    category: 'FAMILY',
-    duration: '1-2 hours',
-    price: 35,
-    rating: 4.5,
-    reviewCount: 201,
-    image: 'https://picsum.photos/600/400?random=exp5',
-    featured: false,
-  },
-  {
-    id: '6',
-    name: 'Romantic Sunset Cruise',
-    description: 'Private catamaran cruise at sunset with champagne and stunning ocean views.',
-    category: 'ROMANTIC',
-    duration: '2 hours',
-    price: 180,
-    rating: 4.9,
-    reviewCount: 92,
-    image: 'https://picsum.photos/600/400?random=exp6',
-    featured: true,
-  },
-];
+export async function getExperiences(filters?: ExperienceFilters): Promise<Experience[]> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.category && filters.category !== 'ALL') params.set('category', filters.category);
+    if (filters?.search) params.set('search', filters.search);
+    if (filters?.page) params.set('page', String(filters.page));
+    if (filters?.limit) params.set('limit', String(filters.limit));
 
-export class ExperienceAPI {
-  static async getExperiences(filters?: ExperienceFilters): Promise<Experience[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    let result = [...mockExperiences];
-
-    if (filters?.category && filters.category !== 'ALL') {
-      result = result.filter((e) => e.category === filters.category);
-    }
-
-    if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      result = result.filter(
-        (e) => e.name.toLowerCase().includes(search) || e.description.toLowerCase().includes(search)
-      );
-    }
-
-    return result;
+    const qs = params.toString();
+    const res = await fetch(`${API_URL}/experiences${qs ? `?${qs}` : ''}`);
+    if (!res.ok) return [];
+    const json: PaginatedExperiences = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
   }
+}
 
-  static async getExperienceById(id: string): Promise<Experience> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const exp = mockExperiences.find((e) => e.id === id);
-    if (!exp) throw new Error('Experience not found');
-    return exp;
+export async function getFeaturedExperiences(): Promise<Experience[]> {
+  try {
+    const res = await fetch(`${API_URL}/experiences/featured`);
+    if (!res.ok) return [];
+    const json: Experience[] = await res.json();
+    return Array.isArray(json) ? json : [];
+  } catch {
+    return [];
   }
+}
 
-  static async getFeaturedExperiences(): Promise<Experience[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return mockExperiences.filter((e) => e.featured);
-  }
-
-  static async getExperiencesByCategory(category: ExperienceCategory): Promise<Experience[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return mockExperiences.filter((e) => e.category === category);
-  }
+export async function getExperienceById(id: string): Promise<Experience> {
+  const res = await fetch(`${API_URL}/experiences/${id}`);
+  if (!res.ok) throw new Error('Experience not found');
+  return res.json() as Promise<Experience>;
 }
