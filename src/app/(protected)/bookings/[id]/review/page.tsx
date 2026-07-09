@@ -3,7 +3,7 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { CreateReviewModal } from '@/features/review';
+import { ReviewForm } from '@/features/review';
 
 export default function BookingReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,7 +16,7 @@ export default function BookingReviewPage({ params }: { params: Promise<{ id: st
         </Link>
         <h1 className="text-xl font-semibold text-gray-900">Leave a Review</h1>
       </div>
-      <CreateReviewModal bookingId={id} />
+      <ReviewForm bookingId={id} onCancel={() => window.history.back()} />
     </div>
   );
 }
