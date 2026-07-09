@@ -50,7 +50,7 @@ export function WhyChooseUs() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="relative h-96 rounded-2xl overflow-hidden">
             <Image
-              src="https://picsum.photos/800/600?random=why"
+              src="https://c8.alamy.com/comp/BPR7X8/collage-of-images-of-sri-lanka-BPR7X8.jpg"
               alt="Why Choose Us"
               fill
               className="object-cover"

@@ -78,7 +78,7 @@ export function ContactForm() {
             <Textarea rows={5} value={form.message} onChange={(e) => set('message', e.target.value)} placeholder="How can we help you?" />
             {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
           </div>
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
+          <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white" disabled={mutation.isPending}>
             {mutation.isPending ? 'Sending…' : 'Send Message'}
           </Button>
         </form>

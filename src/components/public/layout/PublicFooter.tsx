@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Compass } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const quickLinks = [
   { href: '/', label: 'Home' },
@@ -26,8 +27,14 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center shadow-sm">
-                <Compass className="w-6 h-6 text-white" strokeWidth={2} />
+              <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+                <Image
+                  src="/img/logo.jpeg"
+                  alt="Sri Way Tours"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-bold text-base text-white tracking-tight">Sri Way</span>
