@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, User, Compass } from 'lucide-react';
+import Image from 'next/image';
+import { Search, User } from 'lucide-react';
 import { Navigation } from './Navigation';
 import { MobileMenu } from './MobileMenu';
 
@@ -11,8 +12,15 @@ export function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center shadow-sm">
-              <Compass className="w-6 h-6 text-white" strokeWidth={2} />
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+              <Image
+                src="/img/logo.jpeg"
+                alt="Sri Way Tours"
+                fill
+                className="object-cover"
+                sizes="40px"
+                priority
+              />
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="font-bold text-base text-gray-900 tracking-tight">Sri Way</span>
