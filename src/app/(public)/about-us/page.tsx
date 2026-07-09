@@ -104,7 +104,7 @@ export default function AboutUsPage() {
                 Two Decades of Crafting Unforgettable Sri Lankan Journeys
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Founded in 2003 in the heart of Colombo, Sri Way Tours was born from a single conviction — that Sri Lanka is one of the world&apos;s most extraordinary destinations, and that every traveller deserves to experience it authentically. What started as a boutique operation has grown into a full-spectrum travel company trusted by guests from over 50 countries.
+                Founded in 2003 in the heart of Colombo, Sri Way Tours was born from a single conviction - that Sri Lanka is one of the world&apos;s most extraordinary destinations, and that every traveller deserves to experience it authentically. What started as a boutique operation has grown into a full-spectrum travel company trusted by guests from over 50 countries.
               </p>
               <div className="bg-teal-50 border-l-4 border-teal-500 pl-6 py-4 rounded-r-lg">
                 <p className="text-teal-800 font-semibold text-lg italic">
@@ -112,7 +112,7 @@ export default function AboutUsPage() {
                 </p>
               </div>
               <p className="text-gray-600 leading-relaxed">
-                Our vision is to be Sri Lanka&apos;s most trusted travel partner — one that continually raises the bar for personalised, sustainable, and culturally rich tourism. Every itinerary we craft reflects our deep love for this island and our commitment to the communities that make it extraordinary.
+                Our vision is to be Sri Lanka&apos;s most trusted travel partner - one that continually raises the bar for personalised, sustainable, and culturally rich tourism. Every itinerary we craft reflects our deep love for this island and our commitment to the communities that make it extraordinary.
               </p>
             </div>
           </div>

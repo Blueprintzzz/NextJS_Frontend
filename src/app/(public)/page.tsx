@@ -34,7 +34,7 @@ const heroSlides = [
   {
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaczuwgS2A__U7qzOV2KCyx05pbc-5hxJFaKp7FWTh9Sdt5hKVTn6rBgs&s=10',
     title: 'An Island Of Wonder',
-    subtitle: 'From misty mountains to golden shores — experience it all',
+    subtitle: 'From misty mountains to golden shores - experience it all',
     ctaText: 'Start Exploring',
     ctaLink: '/experiences',
     secondaryCtaText: 'Contact Us',
