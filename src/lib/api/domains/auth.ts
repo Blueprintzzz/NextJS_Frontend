@@ -15,4 +15,11 @@ export const authApi = {
   async getProfile(): Promise<unknown> {
     return apiRequest('/auth/profile');
   },
+
+  async register(payload: { email: string; name: string; password: string; username: string; role: string }): Promise<unknown> {
+    return apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
 };
