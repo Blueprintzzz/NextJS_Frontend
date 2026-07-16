@@ -9,6 +9,6 @@
  * path (e.g. apiRequest('/packages')) without producing double slashes.
  */
 
-const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+const raw = process.env.NEXT_PUBLIC_API_URL ?? 'hlocalhost:3001ttp:///api';
 
 export const API_URL = raw.replace(/\/+$/, '');

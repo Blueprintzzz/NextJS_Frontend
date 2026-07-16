@@ -9,6 +9,8 @@ import { FormStepper } from '@/components/shared/FormStepper';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { useCreatePackage } from '../hooks/usePackages';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '../utils/package.utils';
+import { apiRequest } from '@/lib/api';
+import { API_URL } from '@/lib/api/config';
 import type { CreatePackageInput, PackageItinerary, PackageInclusion } from '../types/package.types';
 
 // ─── Steps definition ─────────────────────────────────────────────────────────
@@ -61,20 +63,94 @@ export function CreatePackageForm() {
   const [form, setForm]                   = useState<CreatePackageInput>(EMPTY);
   const [highlightInput, setHighlightInput] = useState('');
 
+  // ── Picker modal state ───────────────────────────────────────────────────
+  const [picker, setPicker] = useState<{
+    open: boolean;
+    dayIndex: number;
+    tag: 'destination' | 'experience' | null;
+  }>({ open: false, dayIndex: 0, tag: null });
+
+  const [destinations,   setDestinations]  = useState<{ id: string; name: string }[]>([]);
+  const [experiences,    setExperiences]   = useState<{ id: string; name: string; category?: string }[]>([]);
+  const [pickerSearch,   setPickerSearch]  = useState('');
+  const [loadingPicker,  setLoadingPicker] = useState(false);
+  const [pickerError,    setPickerError]   = useState<string | null>(null);
+
   const set = <K extends keyof CreatePackageInput>(k: K, v: CreatePackageInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const addItineraryDay = () =>
+  const addItineraryDay = () => {
     set('itinerary', [
       ...form.itinerary,
       { day: form.itinerary.length + 1, title: '', description: '', attractions: [] },
     ]);
+  };
 
   const updateDay = (i: number, patch: Partial<PackageItinerary>) =>
     set('itinerary', form.itinerary.map((d, idx) => idx === i ? { ...d, ...patch } : d));
 
-  const removeDay = (i: number) =>
+  const removeDay = (i: number) => {
     set('itinerary', form.itinerary.filter((_, idx) => idx !== i).map((d, idx) => ({ ...d, day: idx + 1 })));
+  };
+
+  // ── Picker handlers ──────────────────────────────────────────────────────
+  const openPicker = async (dayIndex: number, tag: 'destination' | 'experience') => {
+    setPicker({ open: true, dayIndex, tag });
+    setPickerSearch('');
+    setPickerError(null);
+
+    if (tag === 'destination' && destinations.length === 0) {
+      setLoadingPicker(true);
+      try {
+        const data = await apiRequest('/districts');
+        const list = data as { id: string; name: string }[];
+        setDestinations(Array.isArray(list) ? list : ((data as { data?: typeof list }).data ?? []));
+      } catch {
+        setPickerError(`Could not load districts — check NEXT_PUBLIC_API_URL in your .env (${API_URL})`);
+      } finally {
+        setLoadingPicker(false);
+      }
+    }
+
+    if (tag === 'experience' && experiences.length === 0) {
+      setLoadingPicker(true);
+      try {
+        const data = await apiRequest('/experiences');
+        const list = data as { id: string; name: string; category?: string }[];
+        setExperiences(Array.isArray(list) ? list : ((data as { data?: typeof list }).data ?? []));
+      } catch {
+        setPickerError(`Could not load experiences — check NEXT_PUBLIC_API_URL in your .env (${API_URL})`);
+      } finally {
+        setLoadingPicker(false);
+      }
+    }
+  };
+
+  const closePicker = () => setPicker({ open: false, dayIndex: 0, tag: null });
+
+  const selectItem = (item: { id: string; name: string }) => {
+    const { dayIndex, tag } = picker;
+    if (!tag) return;
+    const day = form.itinerary[dayIndex];
+    const alreadyAdded = day.attractions.some((a) => a.id === item.id && a.tag === tag);
+    if (alreadyAdded) { closePicker(); return; }
+    const updated = form.itinerary.map((d, i) =>
+      i === dayIndex
+        ? { ...d, attractions: [...d.attractions, { id: item.id, label: item.name, tag }] }
+        : d
+    );
+    set('itinerary', updated);
+    closePicker();
+  };
+
+  const removeAttraction = (dayIndex: number, attrIndex: number) => {
+    const updated = form.itinerary.map((d, i) =>
+      i === dayIndex
+        ? { ...d, attractions: d.attractions.filter((_, j) => j !== attrIndex) }
+        : d
+    );
+    set('itinerary', updated);
+  };
 
   const addInclusion = () =>
     set('inclusions', [...form.inclusions, { type: 'MEAL', description: '' }]);
@@ -273,35 +349,76 @@ export function CreatePackageForm() {
           ) : (
             <div className="space-y-4">
               {form.itinerary.map((day, i) => (
-                <div key={i} className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Day {day.day}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeDay(i)}
-                      className="text-xs text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      Remove
-                    </button>
+                  <div key={i} className="rounded-xl border border-gray-200 p-4 space-y-3 bg-white">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-700">Day {day.day}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeDay(i)}
+                        className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <Input
+                      placeholder="Day title e.g. Arrival in Colombo"
+                      value={day.title}
+                      onChange={(e) => updateDay(i, { title: e.target.value })}
+                    />
+                    <Textarea
+                      placeholder="What happens this day…"
+                      rows={2}
+                      value={day.description}
+                      onChange={(e) => updateDay(i, { description: e.target.value })}
+                    />
+
+                    {/* ── Picker buttons ── */}
+                    <div className="flex gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => openPicker(i, 'destination')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+                      >
+                        🗺️ + Destination
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openPicker(i, 'experience')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 text-xs font-semibold hover:bg-violet-100 transition-colors"
+                      >
+                        ✨ + Experience
+                      </button>
+                    </div>
+
+                    {/* ── Selected attraction pills ── */}
+                    {day.attractions.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {day.attractions.map((attr, attrIdx) => (
+                          <span
+                            key={attrIdx}
+                            className={[
+                              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                              attr.tag === 'destination'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-violet-50  text-violet-700  border-violet-200',
+                            ].join(' ')}
+                          >
+                            {attr.tag === 'destination' ? '📍' : '🎯'}
+                            {attr.label}
+                            <button
+                              type="button"
+                              onClick={() => removeAttraction(i, attrIdx)}
+                              className="ml-0.5 text-gray-400 hover:text-red-500 font-bold text-xs leading-none bg-transparent border-none cursor-pointer"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <Input
-                    placeholder="Day title e.g. Arrival in Colombo"
-                    value={day.title}
-                    onChange={(e) => updateDay(i, { title: e.target.value })}
-                  />
-                  <Textarea
-                    placeholder="What happens this day…"
-                    rows={2}
-                    value={day.description}
-                    onChange={(e) => updateDay(i, { description: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Attractions (comma separated)"
-                    value={day.attractions.join(', ')}
-                    onChange={(e) => updateDay(i, { attractions: e.target.value.split(',').map((a) => a.trim()).filter(Boolean) })}
-                  />
-                </div>
-              ))}
+                ))}
             </div>
           )}
 
@@ -363,6 +480,166 @@ export function CreatePackageForm() {
           </Button>
         </StepCard>
       )}
+
+      {/* ── Picker Modal ─────────────────────────────────────────── */}
+      {picker.open && (() => {
+        const isDestination = picker.tag === 'destination';
+        const rawList = isDestination ? destinations : experiences;
+        const filtered = rawList.filter((item) =>
+          item.name.toLowerCase().includes(pickerSearch.toLowerCase())
+        );
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={closePicker}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden flex flex-col"
+              style={{ maxHeight: '80vh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className={[
+                    'w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0',
+                    isDestination ? 'bg-emerald-50' : 'bg-violet-50',
+                  ].join(' ')}>
+                    {isDestination ? '🗺️' : '✨'}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                      Day {picker.dayIndex + 1}
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">
+                      {isDestination ? 'Select a Destination' : 'Select an Experience'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closePicker}
+                  className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-lg font-bold leading-none transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="px-4 py-3 border-b border-gray-50 flex-shrink-0">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+                    🔍
+                  </span>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={pickerSearch}
+                    onChange={(e) => setPickerSearch(e.target.value)}
+                    placeholder={isDestination ? 'Search districts…' : 'Search experiences…'}
+                    className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* List */}
+              <div className="overflow-y-auto flex-1 p-2">
+                {/* Loading */}
+                {loadingPicker && (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
+                    <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+                    <p className="text-xs">Loading from …</p>
+                  </div>
+                )}
+
+                {/* Error */}
+                {!loadingPicker && pickerError && (
+                  <div className="mx-2 my-3 p-3 rounded-lg bg-red-50 border border-red-100">
+                    <p className="text-xs text-red-600 font-medium">⚠️ {pickerError}</p>
+                    <p className="text-xs text-red-400 mt-1">
+                      Current NEXT_PUBLIC_API_URL: {API_URL}
+                    </p>
+                  </div>
+                )}
+
+                {/* Empty */}
+                {!loadingPicker && !pickerError && filtered.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2">
+                    <span className="text-3xl opacity-30">{isDestination ? '🗺️' : '✨'}</span>
+                    <p className="text-sm text-gray-400 text-center px-6">
+                      {pickerSearch
+                        ? `No results for "${pickerSearch}"`
+                        : isDestination
+                          ? 'No districts returned from the API'
+                          : 'No experiences returned from the API'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Items */}
+                {!loadingPicker && !pickerError && filtered.map((item) => {
+                  const day = form.itinerary[picker.dayIndex];
+                  const alreadyAdded = day?.attractions.some(
+                    (a) => a.id === item.id && a.tag === picker.tag
+                  );
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => !alreadyAdded && selectItem(item)}
+                      disabled={alreadyAdded}
+                      className={[
+                        'w-full text-left flex items-center justify-between',
+                        'px-3 py-2.5 rounded-xl text-sm transition-colors mb-0.5',
+                        alreadyAdded
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:bg-gray-50 cursor-pointer',
+                      ].join(' ')}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={[
+                          'w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0',
+                          isDestination ? 'bg-emerald-50' : 'bg-violet-50',
+                        ].join(' ')}>
+                          {isDestination ? '📍' : '🎯'}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-800 truncate">{item.name}</p>
+                          {'category' in item && (item as { category?: string }).category && (
+                            <p className="text-xs text-gray-400 mt-0.5">{(item as { category?: string }).category}</p>
+                          )}
+                        </div>
+                      </div>
+                      {alreadyAdded ? (
+                        <span className="text-xs font-semibold text-emerald-600 flex-shrink-0 ml-2">
+                          ✓ Added
+                        </span>
+                      ) : (
+                        <span className={[
+                          'text-xs font-semibold flex-shrink-0 ml-2',
+                          isDestination ? 'text-emerald-600' : 'text-violet-600',
+                        ].join(' ')}>
+                          + Add
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              {!loadingPicker && !pickerError && filtered.length > 0 && (
+                <div className="px-5 py-3 border-t border-gray-100 flex-shrink-0 bg-gray-50">
+                  <p className="text-xs text-gray-400 text-center">
+                    {filtered.length}{' '}
+                    {isDestination ? 'district' : 'experience'}
+                    {filtered.length !== 1 ? 's' : ''} available
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Navigation ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between pb-8">

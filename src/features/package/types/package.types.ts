@@ -14,7 +14,7 @@ export interface PackageItinerary {
   day: number;
   title: string;
   description: string;
-  attractions: string[];
+  attractions: { id: string; label: string; tag: 'destination' | 'experience' }[];
 }
 
 export interface PackageInclusion {
