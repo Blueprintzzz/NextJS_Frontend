@@ -5,18 +5,28 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { FormStepper } from '@/components/shared/FormStepper';
+import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { API_URL } from '@/lib/api/config';
 import { useCreateExperience, useUpdateExperience, useExperienceById } from '../hooks/useExperience';
 import type { CreateExperienceInput } from '../api/experience.api';
 
+// ─── Steps definition ─────────────────────────────────────────────────────────
+const STEPS = [
+  { label: 'Basic Info',    description: 'Name, category' },
+  { label: 'Media',         description: 'Photos' },
+  { label: 'Location',      description: 'Where it happens' },
+  { label: 'Pricing',       description: 'Price, duration & visibility' },
+];
+
+// ─── Static data ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { value: 'ADVENTURE', label: 'Adventure' },
-  { value: 'NATURE', label: 'Nature & Wildlife' },
-  { value: 'CULTURAL', label: 'Cultural' },
+  { value: 'ADVENTURE',  label: 'Adventure' },
+  { value: 'NATURE',     label: 'Nature & Wildlife' },
+  { value: 'CULTURAL',   label: 'Cultural' },
   { value: 'RELAXATION', label: 'Relaxation & Spa' },
-  { value: 'FAMILY', label: 'Family-Friendly' },
-  { value: 'ROMANTIC', label: 'Romantic Escapes' },
+  { value: 'FAMILY',     label: 'Family-Friendly' },
+  { value: 'ROMANTIC',   label: 'Romantic Escapes' },
 ];
 
 const EMPTY: CreateExperienceInput = {
@@ -26,22 +36,47 @@ const EMPTY: CreateExperienceInput = {
 };
 
 interface District { id: string; name: string; }
+interface Props { experienceId?: string; redirectTo?: string; }
 
-interface Props {
-  experienceId?: string;
-  redirectTo?: string;
+// ─── Shared field helpers ─────────────────────────────────────────────────────
+function FieldLabel({ htmlFor, children, hint }: { htmlFor?: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <div className="mb-1.5">
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">{children}</label>
+      {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
+    </div>
+  );
 }
 
+function StyledSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+    />
+  );
+}
+
+// ─── Step card wrapper ────────────────────────────────────────────────────────
+function StepCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-6 py-6 space-y-5">
+      {children}
+    </div>
+  );
+}
+
+// ─── Main form ────────────────────────────────────────────────────────────────
 export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences' }: Props) {
-  const router = useRouter();
-  const isEdit = !!experienceId;
+  const router  = useRouter();
+  const isEdit  = !!experienceId;
 
   const { data: existing, isLoading: loadingExisting } = useExperienceById(experienceId ?? null);
   const createMutation = useCreateExperience();
   const updateMutation = useUpdateExperience();
 
-  const [form, setForm] = useState<CreateExperienceInput>(EMPTY);
-  const [imageInput, setImageInput] = useState('');
+  const [step, setStep]         = useState(0);
+  const [form, setForm]         = useState<CreateExperienceInput>(EMPTY);
   const [districts, setDistricts] = useState<District[]>([]);
 
   useEffect(() => {
@@ -54,23 +89,23 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   useEffect(() => {
     if (existing) {
       setForm({
-        name: existing.name,
+        name:        existing.name,
         description: existing.description,
-        category: existing.category,
-        price: Number(existing.price),
-        duration: existing.duration,
-        image: existing.image ?? '',
-        images: Array.isArray(existing.images) ? existing.images as string[] : [],
-        location: existing.location ?? '',
-        districtId: existing.districtId ?? '',
-        featured: existing.featured,
-        status: existing.status,
+        category:    existing.category,
+        price:       Number(existing.price),
+        duration:    existing.duration,
+        image:       existing.image ?? '',
+        images:      Array.isArray(existing.images) ? existing.images as string[] : [],
+        location:    existing.location ?? '',
+        districtId:  existing.districtId ?? '',
+        featured:    existing.featured,
+        status:      existing.status,
       });
     }
   }, [existing]);
 
-  if (isEdit && loadingExisting) return <div className="h-64 rounded-lg bg-gray-100 animate-pulse" />;
-  if (isEdit && !existing) return <p className="text-sm text-red-600">Experience not found.</p>;
+  if (isEdit && loadingExisting) return <div className="h-64 rounded-xl bg-gray-100 animate-pulse" />;
+  if (isEdit && !existing)       return <p className="text-sm text-red-600">Experience not found.</p>;
 
   const set = <K extends keyof CreateExperienceInput>(k: K, v: CreateExperienceInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -78,159 +113,198 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const handleSubmit = () => {
     const payload = {
       ...form,
-      price: Number(form.price),
-      images: form.images?.filter(Boolean) ?? [],
+      price:      Number(form.price),
+      images:     form.images?.filter(Boolean) ?? [],
       districtId: form.districtId || undefined,
-      image: form.image || undefined,
-      location: form.location || undefined,
+      image:      form.image      || undefined,
+      location:   form.location   || undefined,
     };
-
     if (isEdit) {
-      updateMutation.mutate(
-        { id: experienceId!, data: payload },
-        { onSuccess: () => router.push(redirectTo) },
-      );
+      updateMutation.mutate({ id: experienceId!, data: payload }, { onSuccess: () => router.push(redirectTo) });
     } else {
       createMutation.mutate(payload, { onSuccess: () => router.push(redirectTo) });
     }
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const isLast    = step === STEPS.length - 1;
 
   return (
-    <Card className="max-w-2xl">
-      <CardContent className="pt-6 space-y-4">
-        {/* Name */}
-        <div>
-          <label className="text-sm font-medium">Name *</label>
-          <Input value={form.name} onChange={(e) => set('name', e.target.value)} className="mt-1" />
-        </div>
+    <div className="space-y-6">
+      {/* ── Stepper ─────────────────────────────────────────────── */}
+      <FormStepper
+        steps={STEPS}
+        current={step}
+        onStepClick={(i) => i < step && setStep(i)}
+      />
 
-        {/* Description */}
-        <div>
-          <label className="text-sm font-medium">Description *</label>
-          <Textarea rows={4} value={form.description} onChange={(e) => set('description', e.target.value)} className="mt-1" />
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="text-sm font-medium">Category *</label>
-          <select
-            value={form.category}
-            onChange={(e) => set('category', e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mt-1"
-          >
-            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-        </div>
-
-        {/* Price + Duration */}
-        <div className="grid grid-cols-2 gap-4">
+      {/* ── Step 0 — Basic Info ──────────────────────────────────── */}
+      {step === 0 && (
+        <StepCard>
           <div>
-            <label className="text-sm font-medium">Price (USD) *</label>
-            <Input type="number" min={0} step="0.01" value={form.price} onChange={(e) => set('price', Number(e.target.value))} className="mt-1" />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Duration *</label>
-            <Input placeholder='e.g. "3 hours"' value={form.duration} onChange={(e) => set('duration', e.target.value)} className="mt-1" />
-          </div>
-        </div>
-
-        {/* Image */}
-        <div>
-          <label className="text-sm font-medium">Main Image URL</label>
-          <Input placeholder="https://..." value={form.image ?? ''} onChange={(e) => set('image', e.target.value)} className="mt-1" />
-        </div>
-
-        {/* Additional Images */}
-        <div>
-          <label className="text-sm font-medium">Additional Images</label>
-          <div className="flex gap-2 mt-1">
+            <FieldLabel htmlFor="exp-name">Name *</FieldLabel>
             <Input
-              placeholder="https://..."
-              value={imageInput}
-              onChange={(e) => setImageInput(e.target.value)}
+              id="exp-name"
+              placeholder="e.g. Sunrise Hike at Ella Rock"
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
             />
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                if (imageInput.trim()) {
-                  set('images', [...(form.images ?? []), imageInput.trim()]);
-                  setImageInput('');
-                }
-              }}
-            >
-              Add
-            </Button>
           </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {(form.images ?? []).map((url, i) => (
-              <span key={i} className="inline-flex items-center gap-1 bg-gray-100 rounded-full px-2.5 py-0.5 text-xs truncate max-w-[220px]">
-                {url}
-                <button
-                  onClick={() => set('images', (form.images ?? []).filter((_, idx) => idx !== i))}
-                  className="text-gray-400 hover:text-red-500"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
 
-        {/* Location + District */}
-        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium">Location</label>
-            <Input placeholder="e.g. Sigiriya" value={form.location ?? ''} onChange={(e) => set('location', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <label className="text-sm font-medium">District</label>
-            <select
-              value={form.districtId ?? ''}
-              onChange={(e) => set('districtId', e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mt-1"
-            >
-              <option value="">— None —</option>
-              {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* Status + Featured */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Status</label>
-            <select
-              value={form.status ?? 'ACTIVE'}
-              onChange={(e) => set('status', e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mt-1"
-            >
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2 pt-6">
-            <input
-              id="featured"
-              type="checkbox"
-              checked={form.featured ?? false}
-              onChange={(e) => set('featured', e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300"
+            <FieldLabel htmlFor="exp-desc">Description *</FieldLabel>
+            <Textarea
+              id="exp-desc"
+              rows={4}
+              placeholder="Describe the experience in detail…"
+              value={form.description}
+              onChange={(e) => set('description', e.target.value)}
             />
-            <label htmlFor="featured" className="text-sm font-medium">Featured</label>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex justify-between pt-2">
-          <Button variant="secondary" onClick={() => router.back()}>Cancel</Button>
+          <div>
+            <FieldLabel htmlFor="exp-category">Category *</FieldLabel>
+            <StyledSelect
+              id="exp-category"
+              value={form.category}
+              onChange={(e) => set('category', e.target.value)}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </StyledSelect>
+          </div>
+        </StepCard>
+      )}
+
+      {/* ── Step 1 — Media ───────────────────────────────────────── */}
+      {step === 1 && (
+        <StepCard>
+          <ImageUploadField
+            label="Main Image"
+            hint="The primary photo shown on the experience card."
+            value={form.image ?? ''}
+            onChange={(url) => set('image', url)}
+          />
+
+          <div className="border-t border-gray-100 pt-5">
+            <ImageUploadField
+              label="Additional Images"
+              hint="Add a gallery of supporting photos. Upload files or paste URLs."
+              multiple
+              values={form.images ?? []}
+              onChangeMultiple={(urls) => set('images', urls)}
+            />
+          </div>
+        </StepCard>
+      )}
+
+      {/* ── Step 2 — Location ────────────────────────────────────── */}
+      {step === 2 && (
+        <StepCard>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <FieldLabel htmlFor="exp-location">Location</FieldLabel>
+              <Input
+                id="exp-location"
+                placeholder="e.g. Sigiriya"
+                value={form.location ?? ''}
+                onChange={(e) => set('location', e.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="exp-district">District</FieldLabel>
+              <StyledSelect
+                id="exp-district"
+                value={form.districtId ?? ''}
+                onChange={(e) => set('districtId', e.target.value)}
+              >
+                <option value="">— None —</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </StyledSelect>
+            </div>
+          </div>
+        </StepCard>
+      )}
+
+      {/* ── Step 3 — Pricing & Visibility ────────────────────────── */}
+      {step === 3 && (
+        <StepCard>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <FieldLabel htmlFor="exp-price" hint="Enter amount in USD">Price (USD) *</FieldLabel>
+              <Input
+                id="exp-price"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.price}
+                onChange={(e) => set('price', Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="exp-duration" hint='e.g. "3 hours", "Full day"'>Duration *</FieldLabel>
+              <Input
+                id="exp-duration"
+                placeholder='e.g. "3 hours"'
+                value={form.duration}
+                onChange={(e) => set('duration', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-1">
+            <div>
+              <FieldLabel htmlFor="exp-status">Status</FieldLabel>
+              <StyledSelect
+                id="exp-status"
+                value={form.status ?? 'ACTIVE'}
+                onChange={(e) => set('status', e.target.value)}
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </StyledSelect>
+            </div>
+            <div className="flex items-start gap-3 pt-6">
+              <input
+                id="featured"
+                type="checkbox"
+                checked={form.featured ?? false}
+                onChange={(e) => set('featured', e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-green-600"
+              />
+              <div>
+                <label htmlFor="featured" className="text-sm font-medium text-gray-700">Featured</label>
+                <p className="text-xs text-gray-400">Show on the homepage featured section</p>
+              </div>
+            </div>
+          </div>
+        </StepCard>
+      )}
+
+      {/* ── Navigation ───────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pb-8">
+        <Button
+          variant="secondary"
+          onClick={() => (step === 0 ? router.back() : setStep((s) => s - 1))}
+        >
+          {step === 0 ? 'Cancel' : '← Back'}
+        </Button>
+
+        {isLast ? (
           <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create Experience')}
+            {isPending
+              ? (isEdit ? 'Saving…' : 'Creating…')
+              : (isEdit ? 'Save Changes' : 'Create Experience')}
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        ) : (
+          <Button onClick={() => setStep((s) => s + 1)}>
+            Next →
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

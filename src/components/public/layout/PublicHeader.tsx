@@ -15,7 +15,7 @@ export function PublicHeader() {
             <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
               <Image
                 src="/img/logo.jpeg"
-                alt="Sri Way Tours"
+                alt="Gamanalk"
                 fill
                 className="object-cover"
                 sizes="40px"
@@ -23,7 +23,7 @@ export function PublicHeader() {
               />
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
-              <span className="font-bold text-base text-gray-900 tracking-tight">Sri Way</span>
+              <span className="font-bold text-base text-gray-900 tracking-tight">Gamanalk</span>
               <span className="font-semibold text-xs text-teal-600 tracking-widest uppercase">Tours</span>
             </div>
           </Link>

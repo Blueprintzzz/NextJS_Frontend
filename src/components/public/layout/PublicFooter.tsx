@@ -30,14 +30,14 @@ export function PublicFooter() {
               <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
                 <Image
                   src="/img/logo.jpeg"
-                  alt="Sri Way Tours"
+                  alt="Gamanalk"
                   fill
                   className="object-cover"
                   sizes="40px"
                 />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-bold text-base text-white tracking-tight">Sri Way</span>
+                <span className="font-bold text-base text-white tracking-tight">Gamanalk</span>
                 <span className="font-semibold text-xs text-teal-400 tracking-widest uppercase">Tours</span>
               </div>
             </div>
@@ -115,8 +115,8 @@ export function PublicFooter() {
               <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-teal-400 mt-0.5" />
                 <div className="text-sm text-gray-400">
-                  <p>info@sriwaytours.lk</p>
-                  <p>bookings@sriwaytours.lk</p>
+                  <p>info@Gamanalk.lk</p>
+                  <p>bookings@Gamanalk.lk</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -139,7 +139,7 @@ export function PublicFooter() {
 
         <div className="mt-12 pt-6 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Sri Way Tours. All rights reserved.
+            © {new Date().getFullYear()} Gamanalk. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link href="/privacy" className="text-gray-400 hover:text-teal-400 text-sm transition-colors">

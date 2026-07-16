@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About Us – Sri Way Tours',
-  description: 'Learn about Sri Way Tours – our story, values, team and commitment to sustainable Sri Lanka tourism.',
+  title: 'About Us – Gamanalk',
+  description: 'Learn about Gamanalk – our story, values, team and commitment to sustainable Sri Lanka tourism.',
 };
 
 const values = [
@@ -40,7 +40,7 @@ const values = [
 ];
 
 const milestones = [
-  { year: '2003', title: 'Founded', description: 'Sri Way Tours was established in Colombo with a vision to showcase Sri Lanka\'s hidden treasures.' },
+  { year: '2003', title: 'Founded', description: 'Gamanalk was established in Colombo with a vision to showcase Sri Lanka\'s hidden treasures.' },
   { year: '2008', title: 'National Recognition', description: 'Awarded Best Tour Operator by the Sri Lanka Tourism Development Authority.' },
   { year: '2014', title: 'Sustainability Pledge', description: 'Launched our carbon-neutral tour programme and partnered with local conservation groups.' },
   { year: '2020', title: 'Digital Expansion', description: 'Brought our booking experience fully online, serving travellers across 50+ countries.' },
@@ -68,7 +68,7 @@ export default function AboutUsPage() {
       <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
         <Image
           src="https://picsum.photos/1920/1080?random=about"
-          alt="About Sri Way Tours"
+          alt="About Gamanalk"
           fill
           className="object-cover"
           priority
@@ -104,7 +104,7 @@ export default function AboutUsPage() {
                 Two Decades of Crafting Unforgettable Sri Lankan Journeys
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Founded in 2003 in the heart of Colombo, Sri Way Tours was born from a single conviction - that Sri Lanka is one of the world&apos;s most extraordinary destinations, and that every traveller deserves to experience it authentically. What started as a boutique operation has grown into a full-spectrum travel company trusted by guests from over 50 countries.
+                Founded in 2003 in the heart of Colombo, Gamanalk was born from a single conviction - that Sri Lanka is one of the world&apos;s most extraordinary destinations, and that every traveller deserves to experience it authentically. What started as a boutique operation has grown into a full-spectrum travel company trusted by guests from over 50 countries.
               </p>
               <div className="bg-teal-50 border-l-4 border-teal-500 pl-6 py-4 rounded-r-lg">
                 <p className="text-teal-800 font-semibold text-lg italic">

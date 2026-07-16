@@ -7,7 +7,7 @@ export default function ContactPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Contact Sri Way Tours</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Contact Gamanalk</h1>
         <p className="text-gray-500 mt-2">We'd love to help you plan your perfect Sri Lanka adventure.</p>
       </div>
 
@@ -31,8 +31,8 @@ export default function ContactPage() {
               <Mail className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
               <div>
                 <p className="font-medium text-gray-800">Email</p>
-                <p>info@sriwaytours.lk</p>
-                <p>bookings@sriwaytours.lk</p>
+                <p>info@Gamanalk.lk</p>
+                <p>bookings@Gamanalk.lk</p>
               </div>
             </div>
 

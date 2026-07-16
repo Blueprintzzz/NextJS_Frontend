@@ -4,8 +4,8 @@ import { Phone, Mail, MapPin, Clock, ChevronDown } from 'lucide-react';
 import { ContactForm } from '@/features/inquiry';
 
 export const metadata: Metadata = {
-  title: 'Contact Us – Sri Way Tours',
-  description: 'Get in touch with Sri Way Tours. We respond to all inquiries within 2 hours.',
+  title: 'Contact Us – Gamanalk',
+  description: 'Get in touch with Gamanalk. We respond to all inquiries within 2 hours.',
 };
 
 const faqs = [
@@ -64,7 +64,7 @@ export default function ContactUsPage() {
       <section className="relative h-[55vh] min-h-[380px] flex items-center justify-center overflow-hidden">
         <Image
           src="https://picsum.photos/1920/1080?random=contact"
-          alt="Contact Sri Way Tours"
+          alt="Contact Gamanalk"
           fill
           className="object-cover"
           priority
@@ -106,10 +106,10 @@ export default function ContactUsPage() {
               </div>
               <h3 className="font-bold text-gray-900 text-lg">Email Us</h3>
               <div className="text-gray-600 text-sm space-y-1">
-                <p>info@sriwaytours.lk</p>
-                <p>bookings@sriwaytours.lk</p>
+                <p>info@Gamanalk.lk</p>
+                <p>bookings@Gamanalk.lk</p>
               </div>
-              <a href="mailto:info@sriwaytours.lk" className="text-teal-600 font-medium text-sm hover:text-teal-700">
+              <a href="mailto:info@Gamanalk.lk" className="text-teal-600 font-medium text-sm hover:text-teal-700">
                 Send email →
               </a>
             </div>
@@ -244,7 +244,7 @@ export default function ContactUsPage() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-white rounded-2xl px-8 py-6 text-center shadow-xl">
             <MapPin className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <h3 className="font-bold text-gray-900">Sri Way Tours</h3>
+            <h3 className="font-bold text-gray-900">Gamanalk</h3>
             <p className="text-gray-600 text-sm">123 Galle Road, Colombo 03, Sri Lanka</p>
             <a
               href="https://maps.google.com"
