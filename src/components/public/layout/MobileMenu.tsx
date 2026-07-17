@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Info, MapPin, Compass, Package, Mail, Search } from 'lucide-react';
+import { Menu, X, Home, Info, MapPin, Compass, Package, Mail, Search, Car } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 interface MobileMenuProps {
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/destinations', label: 'Destinations', icon: MapPin },
   { href: '/experiences', label: 'Experiences', icon: Compass },
   { href: '/tours', label: 'Tours', icon: Package },
+  { href: '/vehicles', label: 'Vehicles', icon: Car },
   { href: '/contact-us', label: 'Contact Us', icon: Mail },
 ];
 
