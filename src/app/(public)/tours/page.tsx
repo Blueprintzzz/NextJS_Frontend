@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Search, SlidersHorizontal, X, Package } from 'lucide-react';
 import { TourCard } from '@/components/public/cards/TourCard';
 import { usePackages } from '@/features/package';
@@ -92,6 +93,16 @@ export default function ToursPage() {
                 className="w-full pl-12 pr-4 py-3.5 rounded-full text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 shadow-lg"
               />
             </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <span className="text-white/60 text-sm">or</span>
+            <Link
+              href="/tours/customize"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-white rounded-full text-sm font-semibold transition-colors shadow-lg"
+            >
+              ✨ Customize Your Tour
+            </Link>
           </div>
         </div>
       </section>
@@ -226,6 +237,21 @@ export default function ToursPage() {
                 </button>
               )}
             </div>
+
+            {/* Customize CTA card */}
+            <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white">
+              <div className="text-2xl mb-2">✨</div>
+              <h3 className="font-bold text-base mb-1">Can't find what you need?</h3>
+              <p className="text-teal-100 text-xs leading-relaxed mb-4">
+                Build a fully customized tour package tailored exactly to your dates, group size, and interests.
+              </p>
+              <Link
+                href="/tours/customize"
+                className="block w-full text-center py-2.5 px-4 bg-white text-teal-700 rounded-xl text-sm font-bold hover:bg-teal-50 transition-colors"
+              >
+                Build Custom Package →
+              </Link>
+            </div>
           </aside>
 
           {/* Overlay for mobile sidebar */}
@@ -238,6 +264,27 @@ export default function ToursPage() {
 
           {/* Tours Grid */}
           <div className="flex-1">
+            {/* Customize CTA banner */}
+            <div className="flex items-center justify-between bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-100 rounded-2xl px-5 py-4 mb-6 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-xl flex-shrink-0">
+                  ✨
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">Want something unique?</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Customize dates, destinations, group size &amp; activities — we'll build the perfect itinerary for you.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/tours/customize"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
+              >
+                ✨ Customize Tour
+              </Link>
+            </div>
+
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600 text-sm hidden lg:block">
                 {isLoading ? 'Loading...' : `${tours.length} tour${tours.length !== 1 ? 's' : ''} found`}
