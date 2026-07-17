@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +63,30 @@ export function CreatePackageForm() {
   const [step, setStep]                   = useState(0);
   const [form, setForm]                   = useState<CreatePackageInput>(EMPTY);
   const [highlightInput, setHighlightInput] = useState('');
+
+  // ── Best Season month picker state ───────────────────────────────────────
+  const MONTHS = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  const parseSeason = (season: string) => {
+    const parts = season.split('–').map((s) => s.trim());
+    return { start: parts[0] ?? '', end: parts[1] ?? '' };
+  };
+
+  const [seasonStart, setSeasonStart] = useState(() => parseSeason(form.bestSeason).start);
+  const [seasonEnd,   setSeasonEnd]   = useState(() => parseSeason(form.bestSeason).end);
+
+  const handleSeasonChange = (start: string, end: string) => {
+    if (start && end) {
+      set('bestSeason', `${start} – ${end}`);
+    } else if (start) {
+      set('bestSeason', start);
+    } else {
+      set('bestSeason', '');
+    }
+  };
 
   // ── Picker modal state ───────────────────────────────────────────────────
   const [picker, setPicker] = useState<{
@@ -152,6 +176,18 @@ export function CreatePackageForm() {
     );
     set('itinerary', updated);
   };
+
+  // ── Create-experience shortcut ───────────────────────────────────────────
+  const goCreateExperience = () => {
+    closePicker();
+    router.push('/admin/experiences/create?returnTo=/packages/create');
+  };
+
+  // Clear experience cache on mount so newly created experiences appear
+  // when the user navigates back from /admin/experiences/create
+  useEffect(() => {
+    setExperiences([]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addInclusion = () =>
     set('inclusions', [...form.inclusions, { type: 'MEAL', description: '' }]);
@@ -252,24 +288,104 @@ export function CreatePackageForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Best Season — month range picker */}
             <div>
-              <FieldLabel htmlFor="pkg-season" hint='e.g. "October – March"'>Best Season</FieldLabel>
-              <Input
-                id="pkg-season"
-                placeholder="e.g. October – March"
-                value={form.bestSeason}
-                onChange={(e) => set('bestSeason', e.target.value)}
-              />
+              <label className="text-sm font-medium text-gray-700">Best Season</label>
+              <p className="text-xs text-gray-400 mb-2">Select the start and end month for the best visiting period.</p>
+              <div className="flex items-center gap-3">
+                {/* Start month */}
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 mb-1 block">From</label>
+                  <select
+                    value={seasonStart}
+                    onChange={(e) => {
+                      setSeasonStart(e.target.value);
+                      handleSeasonChange(e.target.value, seasonEnd);
+                    }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                  >
+                    <option value="">Start month</option>
+                    {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                {/* Arrow separator */}
+                <div className="flex-shrink-0 mt-5 text-gray-400 font-medium text-sm">→</div>
+                {/* End month */}
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 mb-1 block">To</label>
+                  <select
+                    value={seasonEnd}
+                    onChange={(e) => {
+                      setSeasonEnd(e.target.value);
+                      handleSeasonChange(seasonStart, e.target.value);
+                    }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                  >
+                    <option value="">End month</option>
+                    {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              {/* Live preview pill */}
+              {form.bestSeason && (
+                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold">
+                  🌤️ {form.bestSeason}
+                </div>
+              )}
             </div>
+
+            {/* Max Capacity — visual selector */}
             <div>
-              <FieldLabel htmlFor="pkg-capacity">Max Capacity</FieldLabel>
-              <Input
-                id="pkg-capacity"
-                type="number"
-                min={1}
-                value={form.maxCapacity}
-                onChange={(e) => set('maxCapacity', Number(e.target.value))}
-              />
+              <label className="text-sm font-medium text-gray-700">Max Capacity</label>
+              <p className="text-xs text-gray-400 mb-3">Choose a group size or use − / + to set an exact number.</p>
+              {/* Preset buttons */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {[2, 4, 6, 8, 10, 15, 20, 30, 50].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => set('maxCapacity', n)}
+                    className={[
+                      'px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer',
+                      form.maxCapacity === n
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400',
+                    ].join(' ')}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              {/* Stepper row */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => set('maxCapacity', Math.max(1, form.maxCapacity - 1))}
+                  className="w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-700 text-lg font-bold flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer flex-shrink-0 select-none"
+                >
+                  −
+                </button>
+                <div className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-50 border border-gray-200">
+                  <span className="text-base">👥</span>
+                  <span className="text-lg font-bold text-gray-900">{form.maxCapacity}</span>
+                  <span className="text-xs text-gray-400">{form.maxCapacity === 1 ? 'person' : 'people'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => set('maxCapacity', form.maxCapacity + 1)}
+                  className="w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-700 text-lg font-bold flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer flex-shrink-0 select-none"
+                >
+                  ＋
+                </button>
+              </div>
+              {/* Size hint */}
+              <p className="text-xs text-gray-400 mt-2">
+                {form.maxCapacity <= 2                                    && '👫 Couple / private tour'}
+                {form.maxCapacity >= 3  && form.maxCapacity <= 6          && '👨‍👩‍👧‍👦 Small group'}
+                {form.maxCapacity >= 7  && form.maxCapacity <= 15         && '🧑‍🤝‍🧑 Medium group'}
+                {form.maxCapacity >= 16 && form.maxCapacity <= 30         && '👥 Large group'}
+                {form.maxCapacity > 30                                    && '🚌 Bus group'}
+              </p>
             </div>
           </div>
 
@@ -580,6 +696,7 @@ export function CreatePackageForm() {
                   const alreadyAdded = day?.attractions.some(
                     (a) => a.id === item.id && a.tag === picker.tag
                   );
+                  const category = (item as { category?: string }).category;
                   return (
                     <button
                       key={item.id}
@@ -587,42 +704,63 @@ export function CreatePackageForm() {
                       onClick={() => !alreadyAdded && selectItem(item)}
                       disabled={alreadyAdded}
                       className={[
-                        'w-full text-left flex items-center justify-between',
-                        'px-3 py-2.5 rounded-xl text-sm transition-colors mb-0.5',
+                        'w-full text-left flex items-center justify-between gap-3',
+                        'px-3 py-2 rounded-lg text-sm transition-colors mb-0.5',
                         alreadyAdded
-                          ? 'opacity-50 cursor-not-allowed'
+                          ? 'opacity-40 cursor-not-allowed bg-gray-50'
                           : 'hover:bg-gray-50 cursor-pointer',
                       ].join(' ')}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className={[
-                          'w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0',
-                          isDestination ? 'bg-emerald-50' : 'bg-violet-50',
-                        ].join(' ')}>
+                      {/* Left: name + category badge */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm flex-shrink-0">
                           {isDestination ? '📍' : '🎯'}
                         </span>
-                        <div className="min-w-0">
-                          <p className="font-medium text-gray-800 truncate">{item.name}</p>
-                          {'category' in item && (item as { category?: string }).category && (
-                            <p className="text-xs text-gray-400 mt-0.5">{(item as { category?: string }).category}</p>
-                          )}
-                        </div>
+                        <span className="font-medium text-gray-800 truncate">{item.name}</span>
+                        {category && (
+                          <span className={[
+                            'flex-shrink-0 text-xs px-1.5 py-0.5 rounded-md font-medium',
+                            isDestination
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : 'bg-violet-50 text-violet-600',
+                          ].join(' ')}>
+                            {category}
+                          </span>
+                        )}
                       </div>
+
+                      {/* Right: added check or + */}
                       {alreadyAdded ? (
-                        <span className="text-xs font-semibold text-emerald-600 flex-shrink-0 ml-2">
-                          ✓ Added
-                        </span>
+                        <span className="flex-shrink-0 text-xs font-semibold text-emerald-500">✓</span>
                       ) : (
                         <span className={[
-                          'text-xs font-semibold flex-shrink-0 ml-2',
-                          isDestination ? 'text-emerald-600' : 'text-violet-600',
+                          'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center',
+                          'text-sm font-bold transition-colors',
+                          isDestination
+                            ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200'
+                            : 'bg-violet-100 text-violet-700 group-hover:bg-violet-200',
                         ].join(' ')}>
-                          + Add
+                          +
                         </span>
                       )}
                     </button>
                   );
                 })}
+
+                {/* Create new experience shortcut — only shown in experience picker */}
+                {!isDestination && (
+                  <div className="sticky bottom-0 pt-2 mt-1 border-t border-gray-100 bg-white">
+                    <button
+                      type="button"
+                      onClick={goCreateExperience}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors cursor-pointer"
+                    >
+                      <span className="text-base">＋</span>
+                      Create New Experience
+                      <span className="text-xs font-normal text-violet-500 ml-1">→ comes back here</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Footer */}

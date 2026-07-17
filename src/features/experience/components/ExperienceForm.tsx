@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -93,6 +93,10 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const router  = useRouter();
   const isEdit  = !!experienceId;
 
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  const effectiveRedirect = returnTo ?? redirectTo;
+
   const { data: existing, isLoading: loadingExisting } = useExperienceById(experienceId ?? null);
   const createMutation = useCreateExperience();
   const updateMutation = useUpdateExperience();
@@ -143,9 +147,9 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
       location:   form.location   || undefined,
     };
     if (isEdit) {
-      updateMutation.mutate({ id: experienceId!, data: payload }, { onSuccess: () => router.push(redirectTo) });
+      updateMutation.mutate({ id: experienceId!, data: payload }, { onSuccess: () => router.push(effectiveRedirect) });
     } else {
-      createMutation.mutate(payload, { onSuccess: () => router.push(redirectTo) });
+      createMutation.mutate(payload, { onSuccess: () => router.push(effectiveRedirect) });
     }
   };
 
