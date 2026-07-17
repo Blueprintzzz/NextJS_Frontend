@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Info, MapPin, Compass, Package, Mail } from 'lucide-react';
+import { Home, Info, MapPin, Compass, Package, Mail, Car } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/destinations', label: 'Destinations', icon: MapPin },
   { href: '/experiences', label: 'Experiences', icon: Compass },
   { href: '/tours', label: 'Tours', icon: Package },
+  { href: '/vehicles', label: 'Vehicles', icon: Car },
   { href: '/contact-us', label: 'Contact Us', icon: Mail },
 ];
 
