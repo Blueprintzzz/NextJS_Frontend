@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormStepper } from '@/components/shared/FormStepper';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
+import { PriceInput } from '@/components/shared/PriceInput';
 import { useCreatePackage } from '../hooks/usePackages';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '../utils/package.utils';
 import { apiRequest } from '@/lib/api';
@@ -211,14 +212,12 @@ export function CreatePackageForm() {
               />
             </div>
             <div>
-              <FieldLabel htmlFor="pkg-price" hint="Enter amount in USD">Base Price (USD)</FieldLabel>
-              <Input
+              <PriceInput
                 id="pkg-price"
-                type="number"
-                min={0}
-                step="0.01"
+                label="Base Price (USD)"
+                hint="Enter amount in USD"
                 value={form.basePrice}
-                onChange={(e) => set('basePrice', Number(e.target.value))}
+                onChange={(v) => set('basePrice', v)}
               />
             </div>
           </div>

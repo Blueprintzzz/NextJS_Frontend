@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormStepper } from '@/components/shared/FormStepper';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
+import { PriceInput } from '@/components/shared/PriceInput';
 import { API_URL } from '@/lib/api/config';
 import { useCreateExperience, useUpdateExperience, useExperienceById } from '../hooks/useExperience';
 import type { CreateExperienceInput } from '../api/experience.api';
@@ -40,9 +41,14 @@ interface Props { experienceId?: string; redirectTo?: string; }
 
 // ─── Shared field helpers ─────────────────────────────────────────────────────
 function FieldLabel({ htmlFor, children, hint }: { htmlFor?: string; children: React.ReactNode; hint?: string }) {
+  // Render "Label *" with the asterisk in red
+  const label = typeof children === 'string' && children.endsWith(' *')
+    ? <>{children.slice(0, -2)} <span className="text-red-500">*</span></>
+    : children;
+
   return (
     <div className="mb-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">{children}</label>
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">{label}</label>
       {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
     </div>
   );
@@ -66,6 +72,22 @@ function StepCard({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Per-step validation ──────────────────────────────────────────────────────
+type StepErrors = Partial<Record<keyof CreateExperienceInput, string>>;
+
+function validateStep(step: number, form: CreateExperienceInput): StepErrors {
+  const errors: StepErrors = {};
+  if (step === 0) {
+    if (!form.name.trim())        errors.name        = 'Name is required.';
+    if (!form.description.trim()) errors.description = 'Description is required.';
+  }
+  if (step === 3) {
+    if (!form.price || Number(form.price) <= 0) errors.price    = 'Enter a price greater than 0.';
+    if (!form.duration.trim())                  errors.duration = 'Duration is required.';
+  }
+  return errors;
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences' }: Props) {
   const router  = useRouter();
@@ -75,8 +97,9 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const createMutation = useCreateExperience();
   const updateMutation = useUpdateExperience();
 
-  const [step, setStep]         = useState(0);
-  const [form, setForm]         = useState<CreateExperienceInput>(EMPTY);
+  const [step, setStep]           = useState(0);
+  const [form, setForm]           = useState<CreateExperienceInput>(EMPTY);
+  const [stepErrors, setStepErrors] = useState<StepErrors>({});
   const [districts, setDistricts] = useState<District[]>([]);
 
   useEffect(() => {
@@ -129,6 +152,14 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const isPending = createMutation.isPending || updateMutation.isPending;
   const isLast    = step === STEPS.length - 1;
 
+  const tryNext = () => {
+    const errors = validateStep(step, form);
+    setStepErrors(errors);
+    if (Object.keys(errors).length === 0) {
+      setStep((s) => s + 1);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* ── Stepper ─────────────────────────────────────────────── */}
@@ -147,8 +178,9 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
               id="exp-name"
               placeholder="e.g. Sunrise Hike at Ella Rock"
               value={form.name}
-              onChange={(e) => set('name', e.target.value)}
+              onChange={(e) => { set('name', e.target.value); setStepErrors((p) => ({ ...p, name: undefined })); }}
             />
+            {stepErrors.name && <p className="text-xs text-red-500 mt-1">{stepErrors.name}</p>}
           </div>
 
           <div>
@@ -158,8 +190,9 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
               rows={4}
               placeholder="Describe the experience in detail…"
               value={form.description}
-              onChange={(e) => set('description', e.target.value)}
+              onChange={(e) => { set('description', e.target.value); setStepErrors((p) => ({ ...p, description: undefined })); }}
             />
+            {stepErrors.description && <p className="text-xs text-red-500 mt-1">{stepErrors.description}</p>}
           </div>
 
           <div>
@@ -234,14 +267,13 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
         <StepCard>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <FieldLabel htmlFor="exp-price" hint="Enter amount in USD">Price (USD) *</FieldLabel>
-              <Input
+              <PriceInput
                 id="exp-price"
-                type="number"
-                min={0}
-                step="0.01"
+                label="Price (USD) *"
+                hint="Enter amount in USD"
                 value={form.price}
-                onChange={(e) => set('price', Number(e.target.value))}
+                onChange={(v) => { set('price', v); setStepErrors((p) => ({ ...p, price: undefined })); }}
+                error={stepErrors.price}
               />
             </div>
             <div>
@@ -250,8 +282,9 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
                 id="exp-duration"
                 placeholder='e.g. "3 hours"'
                 value={form.duration}
-                onChange={(e) => set('duration', e.target.value)}
+                onChange={(e) => { set('duration', e.target.value); setStepErrors((p) => ({ ...p, duration: undefined })); }}
               />
+              {stepErrors.duration && <p className="text-xs text-red-500 mt-1">{stepErrors.duration}</p>}
             </div>
           </div>
 
@@ -288,7 +321,10 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
       <div className="flex items-center justify-between pb-8">
         <Button
           variant="secondary"
-          onClick={() => (step === 0 ? router.back() : setStep((s) => s - 1))}
+          onClick={() => {
+            setStepErrors({});
+            step === 0 ? router.back() : setStep((s) => s - 1);
+          }}
         >
           {step === 0 ? 'Cancel' : '← Back'}
         </Button>
@@ -300,7 +336,7 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
               : (isEdit ? 'Save Changes' : 'Create Experience')}
           </Button>
         ) : (
-          <Button onClick={() => setStep((s) => s + 1)}>
+          <Button onClick={tryNext}>
             Next →
           </Button>
         )}

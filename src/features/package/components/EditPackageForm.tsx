@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { PriceInput } from '@/components/shared/PriceInput';
 import { usePackageById, useUpdatePackage } from '../hooks/usePackages';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '../utils/package.utils';
 import type { CreatePackageInput } from '../types/package.types';
@@ -48,7 +49,12 @@ export function EditPackageForm({ packageId }: Props) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div><label className="text-sm font-medium">Duration (days)</label><Input type="number" min={1} value={form.duration ?? 1} onChange={(e) => set('duration', Number(e.target.value))} /></div>
-          <div><label className="text-sm font-medium">Base Price (USD)</label><Input type="number" min={0} step="0.01" value={form.basePrice ?? 0} onChange={(e) => set('basePrice', Number(e.target.value))} /></div>
+          <PriceInput
+            label="Base Price (USD)"
+            hint="Enter amount in USD"
+            value={form.basePrice ?? 0}
+            onChange={(v) => set('basePrice', v)}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div><label className="text-sm font-medium">Best Season</label><Input value={form.bestSeason ?? ''} onChange={(e) => set('bestSeason', e.target.value)} /></div>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { PriceInput } from '@/components/shared/PriceInput';
 import { useUpdateVehicle, useVehicleById } from '../hooks/useVehicles';
 import type { CreateVehicleInput, VehicleType, VehicleStatus } from '../types/vehicle.types';
 
@@ -71,8 +72,13 @@ export function EditVehicleForm({ id }: Props) {
               <Input type="number" min={1} value={form.capacity ?? ''} onChange={(e) => set('capacity', Number(e.target.value))} required />
             </div>
             <div>
-              <label className="text-sm font-medium">Price/Day (USD) *</label>
-              <Input type="number" min={0} step="0.01" value={form.pricePerDay ?? ''} onChange={(e) => set('pricePerDay', Number(e.target.value))} required />
+              <PriceInput
+                label="Price/Day (USD) *"
+                hint="Per day rate in USD"
+                value={form.pricePerDay ?? 0}
+                onChange={(v) => set('pricePerDay', v)}
+                required
+              />
             </div>
           </div>
           <div>
