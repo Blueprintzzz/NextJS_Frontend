@@ -238,14 +238,61 @@ export function CreatePackageForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <FieldLabel htmlFor="pkg-duration">Duration (days)</FieldLabel>
-              <Input
-                id="pkg-duration"
-                type="number"
-                min={1}
-                value={form.duration}
-                onChange={(e) => set('duration', Number(e.target.value))}
-              />
+              <label className="text-sm font-medium text-gray-700">Duration (days)</label>
+              <p className="text-xs text-gray-400 mb-3">Pick a common length or use − / + for exact days.</p>
+              {/* Preset quick-select buttons */}
+              <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
+                {[1, 2, 3, 4, 5, 7, 10, 14, 30].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => set('duration', n)}
+                    className={[
+                      'flex flex-col items-center px-2.5 py-2 rounded-xl',
+                      'border text-xs font-semibold transition-colors cursor-pointer min-w-[44px] flex-shrink-0',
+                      form.duration === n
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400',
+                    ].join(' ')}
+                  >
+                    <span className="text-base font-bold leading-tight">{n}</span>
+                    <span className={['text-[10px] mt-0.5', form.duration === n ? 'text-gray-300' : 'text-gray-400'].join(' ')}>
+                      {n === 1 ? 'day' : 'days'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {/* Stepper row */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => set('duration', Math.max(1, form.duration - 1))}
+                  className="w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-700 text-lg font-bold flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer flex-shrink-0 select-none"
+                >
+                  −
+                </button>
+                <div className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-50 border border-gray-200">
+                  <span className="text-base">🗓️</span>
+                  <span className="text-lg font-bold text-gray-900">{form.duration}</span>
+                  <span className="text-xs text-gray-400">{form.duration === 1 ? 'day' : 'days'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => set('duration', form.duration + 1)}
+                  className="w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-700 text-lg font-bold flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer flex-shrink-0 select-none"
+                >
+                  ＋
+                </button>
+              </div>
+              {/* Duration hint */}
+              <p className="text-xs text-gray-400 mt-2">
+                {form.duration === 1                                      && '🌅 Day trip'}
+                {form.duration >= 2  && form.duration <= 3               && '🏃 Weekend getaway'}
+                {form.duration >= 4  && form.duration <= 6               && '✈️ Short holiday'}
+                {form.duration >= 7  && form.duration <= 10              && '🧳 Week-long tour'}
+                {form.duration >= 11 && form.duration <= 14              && '🗺️ Extended journey'}
+                {form.duration > 14                                       && '🌍 Long expedition'}
+              </p>
             </div>
             <div>
               <PriceInput
