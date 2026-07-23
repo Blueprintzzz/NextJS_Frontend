@@ -101,6 +101,7 @@ export function TestimonialCarousel() {
           </div>
 
           <button
+            suppressHydrationWarning
             onClick={prevTestimonial}
             className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
             aria-label="Previous testimonial"
@@ -110,6 +111,7 @@ export function TestimonialCarousel() {
             </svg>
           </button>
           <button
+            suppressHydrationWarning
             onClick={nextTestimonial}
             className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
             aria-label="Next testimonial"
@@ -123,6 +125,7 @@ export function TestimonialCarousel() {
         <div className="flex justify-center gap-2 mt-8">
           {testimonials.map((_, index) => (
             <button
+              suppressHydrationWarning
               key={index}
               onClick={() => setCurrent(index)}
               className={`w-2 h-2 rounded-full transition-all ${

@@ -58,6 +58,13 @@ const SRI_LANKA_DESTINATIONS = [
 const SRI_LANKA_CENTER: [number, number] = [80.7718, 7.8731];
 const SRI_LANKA_DEFAULT_ZOOM = 6.6;
 
+type DistrictItem = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
 function buildMessage(f: {
   tourTypes: string[];
   duration: string;
@@ -65,14 +72,14 @@ function buildMessage(f: {
   budget: string;
   startDate: string;
   destinations: string[];
-  otherDestination: string;
+  extraDestinations: string[];
   specialRequests: string;
   selectedVehicleName: string | null;
 }): string {
-  const destParts = f.destinations.length ? f.destinations.join(', ') : '';
-  const destFull  = destParts
-    ? destParts + (f.otherDestination ? ', ' + f.otherDestination : '')
-    : f.otherDestination || 'Open to suggestions';
+  const allDest = [...f.destinations, ...f.extraDestinations];
+  const destFull = allDest.length > 0
+    ? allDest.join(', ')
+    : 'Open to suggestions';
 
   return [
     `Tour Types: ${f.tourTypes.length ? f.tourTypes.join(', ') : 'Not specified'}`,
@@ -129,6 +136,7 @@ function Stepper({ current, labels, onStepClick }: { current: number; labels: st
           <div key={label} className={`flex items-center ${i === labels.length - 1 ? '' : 'flex-1'}`}>
             <div className="flex flex-col items-center gap-1.5">
               <button
+                suppressHydrationWarning
                 type="button"
                 onClick={() => isCompleted && onStepClick(stepNum)}
                 disabled={!isCompleted}
@@ -158,7 +166,13 @@ function Stepper({ current, labels, onStepClick }: { current: number; labels: st
   );
 }
 
-function DestinationMap({ selected }: { selected: string[] }) {
+function DestinationMap({
+  selected,
+  extras,
+}: {
+  selected: string[];
+  extras: { name: string; latitude: number; longitude: number }[];
+}) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<mapboxgl.Map | null>(null);
   const markersRef   = useRef<mapboxgl.Marker[]>([]);
@@ -178,27 +192,44 @@ function DestinationMap({ selected }: { selected: string[] }) {
     return () => { mapRef.current?.remove(); mapRef.current = null; };
   }, [token]);
 
-  // Update markers whenever selection changes
+  // Update markers whenever selection or extras change
   useEffect(() => {
     if (!mapRef.current) return;
-    markersRef.current.forEach((m) => m.remove());
+
+    markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
-    const points = SRI_LANKA_DESTINATIONS.filter((d) => selected.includes(d.name));
-    points.forEach((d) => {
+
+    const presetPoints = SRI_LANKA_DESTINATIONS.filter(d => selected.includes(d.name));
+
+    presetPoints.forEach(d => {
       const marker = new mapboxgl.Marker({ color: '#0d9488' })
         .setLngLat([d.lng, d.lat])
         .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(d.name))
         .addTo(mapRef.current as mapboxgl.Map);
       markersRef.current.push(marker);
     });
-    if (points.length > 0) {
+
+    extras.forEach(d => {
+      const marker = new mapboxgl.Marker({ color: '#7c3aed' })
+        .setLngLat([d.longitude, d.latitude])
+        .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(d.name + ' ✦'))
+        .addTo(mapRef.current as mapboxgl.Map);
+      markersRef.current.push(marker);
+    });
+
+    const allPoints = [
+      ...presetPoints.map(d => ({ lng: d.lng, lat: d.lat })),
+      ...extras.map(d => ({ lng: d.longitude, lat: d.latitude })),
+    ];
+
+    if (allPoints.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
-      points.forEach((d) => bounds.extend([d.lng, d.lat]));
+      allPoints.forEach(p => bounds.extend([p.lng, p.lat]));
       mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 10, duration: 600 });
     } else {
       mapRef.current.flyTo({ center: SRI_LANKA_CENTER, zoom: SRI_LANKA_DEFAULT_ZOOM, duration: 600 });
     }
-  }, [selected]);
+  }, [selected, extras]);
 
   if (!token) {
     return (
@@ -245,8 +276,16 @@ export default function CustomizeTourPage() {
   const [budget,           setBudget]            = useState('');
   const [startDate,        setStartDate]         = useState('');
   const [destinations,     setDestinations]      = useState<string[]>([]);
-  const [otherDestination, setOtherDestination]  = useState('');
   const [specialRequests,  setSpecialRequests]   = useState('');
+
+  // Extra destinations picked from API districts (have lat/lng)
+  const [extraDestinations, setExtraDestinations] = useState<DistrictItem[]>([]);
+
+  // District search UI state
+  const [allDistricts,     setAllDistricts]     = useState<DistrictItem[]>([]);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
+  const [districtSearch,   setDistrictSearch]   = useState('');
+  const [districtsFetched, setDistrictsFetched] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted,  setSubmitted]  = useState(false);
@@ -264,6 +303,30 @@ export default function CustomizeTourPage() {
   const toggleDestination = (name: string) =>
     setDestinations((prev) => prev.includes(name) ? prev.filter((d) => d !== name) : [...prev, name]);
 
+  const addExtraDestination = (district: DistrictItem) => {
+    const alreadyPreset = SRI_LANKA_DESTINATIONS.some(
+      d => d.name.toLowerCase() === district.name.toLowerCase()
+    );
+    const alreadyExtra = extraDestinations.some(d => d.id === district.id);
+    if (alreadyPreset || alreadyExtra) return;
+    setExtraDestinations(prev => [...prev, district]);
+    setDistrictSearch('');
+  };
+
+  const removeExtraDestination = (id: string) => {
+    setExtraDestinations(prev => prev.filter(d => d.id !== id));
+  };
+
+  const filteredDistricts = districtSearch.trim().length > 0
+    ? allDistricts.filter(d =>
+        d.name.toLowerCase().includes(districtSearch.toLowerCase()) &&
+        !extraDestinations.some(e => e.id === d.id) &&
+        !SRI_LANKA_DESTINATIONS.some(
+          p => p.name.toLowerCase() === d.name.toLowerCase()
+        )
+      )
+    : [];
+
   const goNext = () => {
     if (step === 1) {
       if (!name.trim() || !email.trim()) { setError('Please fill in your name and email.'); return; }
@@ -275,6 +338,29 @@ export default function CustomizeTourPage() {
 
   const goBack = () => { setError(null); setStep((s) => Math.max(s - 1, 1)); };
   const goToStep = (target: number) => { if (target < step) setStep(target); };
+
+  // ── Fetch districts when step 5 is first reached ────────────────────────────
+  useEffect(() => {
+    if (step !== 5 || districtsFetched) return;
+    setDistrictsFetched(true);
+    setDistrictsLoading(true);
+    fetch(`${API_URL}/districts`)
+      .then(async res => {
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        const list: DistrictItem[] = (
+          Array.isArray(data) ? data :
+          Array.isArray(data?.data) ? data.data : []
+        ).filter((d: DistrictItem) =>
+          d.name && d.latitude != null && d.longitude != null
+        );
+        setAllDistricts(list);
+      })
+      .catch(() => {
+        setDistrictsFetched(false); // allow retry
+      })
+      .finally(() => setDistrictsLoading(false));
+  }, [step, districtsFetched]);
 
   // ── Fetch vehicles when step 6 is reached (cached after first load) ────────
   const vehiclesFetchedRef = useRef(false);
@@ -311,7 +397,8 @@ export default function CustomizeTourPage() {
     setError(null);
     setSubmitting(true);
     const message = buildMessage({
-      tourTypes, duration, groupSize, budget, startDate, destinations, otherDestination, specialRequests,
+      tourTypes, duration, groupSize, budget, startDate, destinations,
+      extraDestinations: extraDestinations.map(d => d.name), specialRequests,
       selectedVehicleName: vehicles.find((v) => v.id === selectedVehicleId)
         ? getVehicleName(vehicles.find((v) => v.id === selectedVehicleId)!)
         : null,
@@ -401,15 +488,15 @@ export default function CustomizeTourPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div className="sm:col-span-2">
                     <FieldLabel required>Full Name</FieldLabel>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. James Anderson" className={inputCls} />
+                    <input suppressHydrationWarning type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. James Anderson" className={inputCls} />
                   </div>
                   <div>
                     <FieldLabel required>Email Address</FieldLabel>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputCls} />
+                    <input suppressHydrationWarning type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputCls} />
                   </div>
                   <div>
                     <FieldLabel>Phone / WhatsApp</FieldLabel>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" className={inputCls} />
+                    <input suppressHydrationWarning type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" className={inputCls} />
                   </div>
                 </div>
               </section>
@@ -423,7 +510,7 @@ export default function CustomizeTourPage() {
                   {TOUR_TYPES.map((t) => {
                     const active = tourTypes.includes(t.value);
                     return (
-                      <button key={t.value} type="button" onClick={() => toggleTourType(t.value)}
+                      <button suppressHydrationWarning key={t.value} type="button" onClick={() => toggleTourType(t.value)}
                         className={['flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 text-sm font-medium transition-all cursor-pointer',
                           active ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600', 'hover:border-teal-400'].join(' ')}>
                         <span className="text-2xl">{t.icon}</span>
@@ -445,7 +532,7 @@ export default function CustomizeTourPage() {
                     <div className="flex flex-col gap-2 mt-2">
                       {DURATION_OPTIONS.map((opt) => (
                         <label key={opt} className="flex items-center gap-3 cursor-pointer">
-                          <input type="radio" name="duration" value={opt} checked={duration === opt} onChange={() => setDuration(opt)} className="accent-teal-600 w-4 h-4" />
+                          <input suppressHydrationWarning type="radio" name="duration" value={opt} checked={duration === opt} onChange={() => setDuration(opt)} className="accent-teal-600 w-4 h-4" />
                           <span className="text-sm text-gray-700">{opt}</span>
                         </label>
                       ))}
@@ -456,7 +543,7 @@ export default function CustomizeTourPage() {
                     <div className="flex flex-col gap-2 mt-2">
                       {GROUP_SIZES.map((g) => (
                         <label key={g.value} className="flex items-center gap-3 cursor-pointer">
-                          <input type="radio" name="groupSize" value={g.value} checked={groupSize === g.value} onChange={() => setGroupSize(g.value)} className="accent-teal-600 w-4 h-4" />
+                          <input suppressHydrationWarning type="radio" name="groupSize" value={g.value} checked={groupSize === g.value} onChange={() => setGroupSize(g.value)} className="accent-teal-600 w-4 h-4" />
                           <span className="text-sm text-gray-700">{g.icon} {g.label}</span>
                         </label>
                       ))}
@@ -476,7 +563,7 @@ export default function CustomizeTourPage() {
                     <div className="flex flex-col gap-2 mt-2">
                       {BUDGET_RANGES.map((b) => (
                         <label key={b} className="flex items-center gap-3 cursor-pointer">
-                          <input type="radio" name="budget" value={b} checked={budget === b} onChange={() => setBudget(b)} className="accent-teal-600 w-4 h-4" />
+                          <input suppressHydrationWarning type="radio" name="budget" value={b} checked={budget === b} onChange={() => setBudget(b)} className="accent-teal-600 w-4 h-4" />
                           <span className="text-sm text-gray-700">{b}</span>
                         </label>
                       ))}
@@ -484,7 +571,7 @@ export default function CustomizeTourPage() {
                   </div>
                   <div>
                     <FieldLabel>Preferred Start Date</FieldLabel>
-                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className={inputCls + ' mt-2'} />
+                    <input suppressHydrationWarning type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className={inputCls + ' mt-2'} />
                     <p className="text-xs text-gray-400 mt-1.5">Leave blank if your dates are flexible.</p>
                   </div>
                 </div>
@@ -505,7 +592,7 @@ export default function CustomizeTourPage() {
                         {SRI_LANKA_DESTINATIONS.map((d) => {
                           const active = destinations.includes(d.name);
                           return (
-                            <button key={d.name} type="button" onClick={() => toggleDestination(d.name)}
+                            <button suppressHydrationWarning key={d.name} type="button" onClick={() => toggleDestination(d.name)}
                               className={['inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all cursor-pointer',
                                 active ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-400'].join(' ')}>
                               {active ? '📍' : '○'} {d.name}
@@ -516,7 +603,80 @@ export default function CustomizeTourPage() {
                     </div>
                     <div>
                       <FieldLabel>Other place not listed?</FieldLabel>
-                      <input type="text" value={otherDestination} onChange={(e) => setOtherDestination(e.target.value)} placeholder="e.g. Horton Plains, Kalpitiya…" className={inputCls} />
+                      <p className="text-xs text-gray-400 mb-2">
+                        Search and select — it will appear on the map 🟣
+                      </p>
+
+                      {/* Search input */}
+                      <div className="relative">
+                        <input
+                          suppressHydrationWarning
+                          type="text"
+                          value={districtSearch}
+                          onChange={e => setDistrictSearch(e.target.value)}
+                          placeholder={districtsLoading ? 'Loading districts…' : 'Type to search districts…'}
+                          disabled={districtsLoading}
+                          className={inputCls}
+                        />
+
+                        {/* Dropdown results */}
+                        {filteredDistricts.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 z-20 mt-1
+                                          bg-white border border-gray-200 rounded-xl
+                                          shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                            {filteredDistricts.map(d => (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => addExtraDestination(d)}
+                                className="w-full text-left px-4 py-2.5 text-sm
+                                           text-gray-700 hover:bg-teal-50
+                                           hover:text-teal-700 transition-colors
+                                           flex items-center gap-2 border-b
+                                           border-gray-50 last:border-0"
+                              >
+                                <span className="text-violet-500">🟣</span>
+                                {d.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* No results hint */}
+                        {districtSearch.trim().length > 0 &&
+                         filteredDistricts.length === 0 &&
+                         !districtsLoading && (
+                          <div className="absolute top-full left-0 right-0 z-20 mt-1
+                                          bg-white border border-gray-200 rounded-xl
+                                          shadow-sm px-4 py-3 text-xs text-gray-400">
+                            No matching districts found.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Selected extra destinations as removable pills */}
+                      {extraDestinations.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {extraDestinations.map(d => (
+                            <span
+                              key={d.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5
+                                         rounded-xl border-2 border-violet-300
+                                         bg-violet-50 text-violet-700
+                                         text-xs font-semibold"
+                            >
+                              🟣 {d.name}
+                              <button
+                                type="button"
+                                onClick={() => removeExtraDestination(d.id)}
+                                className="ml-0.5 text-violet-400 hover:text-red-500
+                                           font-bold cursor-pointer bg-transparent
+                                           border-none text-xs leading-none"
+                              >×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <FieldLabel>Special Requests or Notes</FieldLabel>
@@ -530,7 +690,21 @@ export default function CustomizeTourPage() {
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Your route so far</p>
                     <div className="h-full min-h-[320px]">
-                      <DestinationMap selected={destinations} />
+                      <DestinationMap
+                        selected={destinations}
+                        extras={extraDestinations}
+                      />
+                    </div>
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="w-3 h-3 rounded-full bg-teal-500 inline-block flex-shrink-0" />
+                        Selected destination
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="w-3 h-3 rounded-full bg-violet-600 inline-block flex-shrink-0" />
+                        Other district
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -635,16 +809,16 @@ export default function CustomizeTourPage() {
                 <div />
               )}
               <div className="flex items-center gap-3 flex-shrink-0">
-                <button type="button" onClick={goBack} disabled={step === 1}
+                <button suppressHydrationWarning type="button" onClick={goBack} disabled={step === 1}
                   className="px-6 py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                   ← Back
                 </button>
                 {step < TOTAL_STEPS ? (
-                  <button type="button" onClick={goNext} className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold transition-colors">
+                  <button suppressHydrationWarning type="button" onClick={goNext} className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold transition-colors">
                     Next →
                   </button>
                 ) : (
-                  <button type="button" onClick={handleSubmit} disabled={submitting}
+                  <button suppressHydrationWarning type="button" onClick={handleSubmit} disabled={submitting}
                     className="flex items-center gap-2 px-8 py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0">
                     {submitting ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending…</>) : <>✈️ Send My Request</>}
                   </button>
