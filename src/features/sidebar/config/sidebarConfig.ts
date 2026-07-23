@@ -31,7 +31,6 @@ export const sidebarGroups: NavGroup[] = [
   {
     label: 'Vehicles',
     items: [
-      { label: 'Browse Vehicles', href: '/vehicles', icon: Car },
       { label: 'Admin Management', href: '/admin/vehicles', icon: Car },
     ],
   },

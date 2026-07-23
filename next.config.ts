@@ -13,10 +13,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "picsum.photos",
       },
-      // Allow any https source as a fallback (remove this once all image
-      // domains are known and listed explicitly above)
+      // Allow any https source as a fallback
       {
         protocol: "https",
+        hostname: "**",
+      },
+      // Allow http for local dev backend images
+      {
+        protocol: "http",
         hostname: "**",
       },
     ],
