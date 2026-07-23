@@ -69,7 +69,7 @@ export function BookingList() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {['Booking #', 'Dates', 'Passengers', 'Total', 'Status', 'Payment', ''].map((h) => (
+                {['Booking #', 'Dates', 'Passengers', 'Total', 'Status', 'Payment', 'Actions'].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
                 ))}
               </tr>

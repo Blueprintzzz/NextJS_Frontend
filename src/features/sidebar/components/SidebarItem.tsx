@@ -12,11 +12,7 @@ interface SidebarItemProps {
 export function SidebarItem({ item }: SidebarItemProps) {
   const pathname = usePathname();
 
-  // Active if exact match, or if pathname starts with href (for nested routes).
-  // /settings matches /settings/users but /rnr/dashboard must not match /rnr.
-  const isActive =
-    pathname === item.href ||
-    (item.href !== '/' && pathname.startsWith(item.href + '/'));
+  const isActive = pathname === item.href;
 
   const Icon = item.icon;
 

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Mail, Package, Star, MessageSquare, ShieldCheck, UserCircle } from 'lucide-react';
+import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Package, Star, MessageSquare, ShieldCheck, UserCircle } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -57,10 +57,5 @@ export const sidebarGroups: NavGroup[] = [
       { label: 'Experiences', href: '/admin/experiences', icon: Star },
     ],
   },
-  {
-    label: 'Support',
-    items: [
-      { label: 'Contact Us', href: '/contact', icon: Mail },
-    ],
-  },
+
 ];
