@@ -5,9 +5,9 @@ import { ArrowRight, LogIn } from 'lucide-react';
 export function FlowButton({ text = 'Submit' }: { text?: string }) {
   return (
     <button
-      className="group relative flex items-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#ffffff]/40 bg-transparent px-16 min-w-[200px] py-3 text-sm font-semibold text-[#ffffff] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:bg-green-600 hover:rounded-[12px] active:scale-[0.95] mx-auto"
+      className="group relative flex items-center gap-1 overflow-hidden rounded-[100px] border-[1.5px] border-[#ffffff]/40 bg-transparent px-16 min-w-[200px] py-3 text-sm font-semibold text-[#ffffff] cursor-pointer transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-transparent hover:text-white hover:bg-teal-600 hover:rounded-[12px] active:scale-[0.95] mx-auto"
     >
-      <ArrowRight className="absolute w-4 h-4 left-[-25%] stroke-green-600 fill-none z-[9] group-hover:left-4 group-hover:stroke-white transition-all duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
+      <ArrowRight className="absolute w-4 h-4 left-[-25%] stroke-teal-600 fill-none z-[9] group-hover:left-4 group-hover:stroke-white transition-all duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
       <span className="relative z-[1] -translate-x-1 group-hover:translate-x-3 transition-all duration-[800ms] ease-out">
         {text}
       </span>

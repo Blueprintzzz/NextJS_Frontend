@@ -18,7 +18,7 @@ export function DistrictCard({ district }: Props) {
           <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">No image</div>
         )}
         {district.featured && (
-          <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">Featured</span>
+          <span className="absolute top-2 left-2 bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">Featured</span>
         )}
       </div>
       <CardContent className="p-4 space-y-1">
@@ -34,7 +34,7 @@ export function DistrictCard({ district }: Props) {
             <CalendarDays className="w-3 h-3" /> {district.bestVisitingSeason}
           </span>
         </div>
-        <Link href={`/destinations/${district.id}`} className="text-sm text-blue-600 hover:underline block pt-1">
+        <Link href={`/destinations/${district.id}`} className="text-sm text-teal-600 hover:underline block pt-1">
           Explore →
         </Link>
       </CardContent>

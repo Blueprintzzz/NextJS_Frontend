@@ -183,8 +183,8 @@ export function ImageUploadField({
           className={cn(
             'relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 cursor-pointer transition-colors',
             isDragging
-              ? 'border-green-500 bg-green-50'
-              : 'border-gray-200 bg-gray-50 hover:border-green-400 hover:bg-green-50/40'
+              ? 'border-teal-500 bg-teal-50'
+              : 'border-gray-200 bg-gray-50 hover:border-teal-400 hover:bg-teal-50/40'
           )}
         >
           <input
@@ -197,7 +197,7 @@ export function ImageUploadField({
           />
           {isUploading ? (
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <svg className="h-4 w-4 animate-spin text-green-600" viewBox="0 0 24 24" fill="none">
+              <svg className="h-4 w-4 animate-spin text-teal-600" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
               </svg>
@@ -205,14 +205,14 @@ export function ImageUploadField({
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100">
-                <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-teal-100">
+                <svg className="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-700">
-                  Drag &amp; drop or <span className="text-green-600">browse</span>
+                  Drag &amp; drop or <span className="text-teal-600">browse</span>
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WEBP up to 10 MB</p>
               </div>
@@ -230,13 +230,13 @@ export function ImageUploadField({
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
             placeholder="https://example.com/image.jpg"
-            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
           <button
             type="button"
             onClick={handleUrlAdd}
             disabled={!urlInput.trim()}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none transition-colors"
           >
             Add
           </button>

@@ -1,7 +1,7 @@
 import type { InquiryStatus, InquiryPriority } from '../types/inquiry.types';
 
 export const STATUS_COLORS: Record<InquiryStatus, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
+  NEW: 'bg-teal-100 text-teal-800',
   RESPONDED: 'bg-green-100 text-green-800',
   CLOSED: 'bg-gray-100 text-gray-700',
 };

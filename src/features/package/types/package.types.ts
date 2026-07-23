@@ -44,6 +44,7 @@ export interface TourPackage {
 
 export interface PackageFilters {
   category?: PackageCategory;
+  status?: PackageStatus;
   minPrice?: number;
   maxPrice?: number;
   minDuration?: number;

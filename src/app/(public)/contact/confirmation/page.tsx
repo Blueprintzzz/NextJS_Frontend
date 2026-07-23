@@ -26,7 +26,7 @@ export default function ContactConfirmationPage() {
         </Link>
         <Link
           href="/destinations"
-          className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+          className="px-5 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors"
         >
           Continue Exploring
         </Link>

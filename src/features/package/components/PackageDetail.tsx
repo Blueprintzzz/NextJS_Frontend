@@ -83,7 +83,7 @@ export function PackageDetail({ packageId }: Props) {
             <ul className="mt-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
               {pkg.highlights.map((h, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />{h}
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0" />{h}
                 </li>
               ))}
             </ul>

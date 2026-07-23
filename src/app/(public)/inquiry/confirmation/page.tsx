@@ -21,7 +21,7 @@ export default function InquiryConfirmationPage() {
         <Link href="/" className="px-5 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
           Back to Home
         </Link>
-        <Link href="/destinations" className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors">
+        <Link href="/destinations" className="px-5 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors">
           Continue Exploring
         </Link>
         <Link href="/packages" className="px-5 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors">

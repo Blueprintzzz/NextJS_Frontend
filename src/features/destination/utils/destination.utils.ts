@@ -12,7 +12,7 @@ import type { Attraction, AttractionCategory, WeatherInfo } from '../types/desti
 export function getCategoryColor(category: AttractionCategory): string {
   const map: Record<AttractionCategory, string> = {
     TEMPLE: 'bg-orange-100 text-orange-700',
-    BEACH: 'bg-blue-100 text-blue-700',
+    BEACH: 'bg-teal-100 text-teal-700',
     MOUNTAIN: 'bg-slate-100 text-slate-700',
     WATERFALL: 'bg-cyan-100 text-cyan-700',
     HISTORIC: 'bg-amber-100 text-amber-700',

@@ -250,7 +250,7 @@ export function CreateBookingForm({ onSuccess, onCancel }: CreateBookingFormProp
           {/* Progress bar */}
           <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
             <div
-              className="h-full rounded-full bg-green-500 transition-all duration-300"
+              className="h-full rounded-full bg-teal-500 transition-all duration-300"
               style={{ width: `${(passengers.length / numberOfPassengers) * 100}%` }}
             />
           </div>

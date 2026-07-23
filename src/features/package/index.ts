@@ -28,6 +28,7 @@ export type {
   TourPackage,
   PackageCategory,
   PackageStatus,
+  PackageFilters as PackageFilterParams,
   PackageInclusion,
   PackagePaginationResponse,
   CreatePackageInput,

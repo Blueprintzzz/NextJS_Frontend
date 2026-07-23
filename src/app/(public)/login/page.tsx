@@ -2,17 +2,28 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
 import { setUser, setToken } from '@/store/slices/userSlice';
 import { localStorageSetJSON } from '@/lib/utils/localStorage';
 
-export default function LoginPage() {
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState<string | null>(null);
-  const [loading, setLoading]   = useState(false);
+const ROLE_REDIRECTS: Record<string, string> = {
+  ADMIN: '/admin/dashboard',
+  DRIVER: '/driver/dashboard',
+  SUPPLIER: '/driver/dashboard',
+  TOURIST: '/bookings',
+  USER: '/bookings',
+};
 
-  const router   = useRouter();
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
   const dispatch = useAppDispatch();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -20,65 +31,119 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // --- DEV BYPASS: skip API, write a fake session and redirect ---
-    const fakeToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-      btoa(JSON.stringify({ sub: '1', email, exp: Math.floor(Date.now() / 1000) + 86400 })).replace(/=/g, '') +
-      '.fake';
-    const fakeUser = { email, token: fakeToken, baseToken: fakeToken, tokens: { accessToken: fakeToken }, isAuthenticated: true };
-    localStorageSetJSON('user', fakeUser);
-    dispatch(setUser(fakeUser));
-    dispatch(setToken(fakeToken));
-    router.replace('/bookings');
+    try {
+      // DEV BYPASS — replace with real auth API call when backend is ready
+      const fakeRole = email.includes('admin') ? 'ADMIN' : email.includes('driver') ? 'DRIVER' : 'TOURIST';
+      const fakeToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+        btoa(JSON.stringify({ sub: '1', email, role: fakeRole, exp: Math.floor(Date.now() / 1000) + 86400 })).replace(/=/g, '') +
+        '.fake';
+      const fakeUser = {
+        email,
+        role: fakeRole,
+        token: fakeToken,
+        baseToken: fakeToken,
+        tokens: { accessToken: fakeToken },
+        isAuthenticated: true,
+      };
+      localStorageSetJSON('user', fakeUser);
+      dispatch(setUser(fakeUser));
+      dispatch(setToken(fakeToken));
+      router.replace(ROLE_REDIRECTS[fakeRole] ?? '/bookings');
+    } catch {
+      setError('Invalid email or password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Sign in</h1>
-
-        {error && (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {error}
+    <div className="min-h-screen flex">
+      {/* Left panel — branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-700 to-teal-900 flex-col justify-center items-center p-12 text-white">
+        <div className="max-w-sm text-center">
+          <h1 className="text-4xl font-bold mb-4">GamanLk</h1>
+          <p className="text-teal-200 text-lg leading-relaxed">
+            Sri Lanka&apos;s smart tour booking platform. Discover destinations, book experiences, and travel with confidence.
           </p>
-        )}
+          <div className="mt-10 grid grid-cols-2 gap-4 text-sm">
+            {['500+ Destinations', '200+ Drivers', '1000+ Experiences', '10K+ Happy Tourists'].map((s) => (
+              <div key={s} className="bg-white/10 rounded-xl px-4 py-3 font-medium">{s}</div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center bg-gray-50 px-4 py-12">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+            <p className="text-gray-500 mt-1 text-sm">Sign in to your GamanLk account</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-          </div>
+          {error && (
+            <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              {error}
+            </p>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
+            </div>
 
-        <p className="mt-4 text-sm text-gray-500 text-center">
-          No account?{' '}
-          <a href="/register" className="text-gray-900 underline">Register</a>
-        </p>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <Link href="/forgot-password" className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-sm text-gray-500 text-center">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-teal-600 font-semibold hover:text-teal-700">
+              Create one
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

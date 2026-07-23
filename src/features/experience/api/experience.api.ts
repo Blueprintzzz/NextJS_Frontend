@@ -107,4 +107,6 @@ export interface CreateExperienceInput {
   districtId?: string;
   featured?: boolean;
   status?: string;
+  capacity?: number;
+  availability?: string;
 }

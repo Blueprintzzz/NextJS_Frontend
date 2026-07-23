@@ -34,6 +34,7 @@ const EMPTY: CreateExperienceInput = {
   name: '', description: '', category: 'ADVENTURE',
   price: 0, duration: '', image: '', images: [],
   location: '', districtId: '', featured: false, status: 'ACTIVE',
+  capacity: undefined, availability: '',
 };
 
 interface District { id: string; name: string; }
@@ -58,7 +59,7 @@ function StyledSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors"
     />
   );
 }
@@ -116,17 +117,19 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   useEffect(() => {
     if (existing) {
       setForm({
-        name:        existing.name,
-        description: existing.description,
-        category:    existing.category,
-        price:       Number(existing.price),
-        duration:    existing.duration,
-        image:       existing.image ?? '',
-        images:      Array.isArray(existing.images) ? existing.images as string[] : [],
-        location:    existing.location ?? '',
-        districtId:  existing.districtId ?? '',
-        featured:    existing.featured,
-        status:      existing.status,
+        name:         existing.name,
+        description:  existing.description,
+        category:     existing.category,
+        price:        Number(existing.price),
+        duration:     existing.duration,
+        image:        existing.image ?? '',
+        images:       Array.isArray(existing.images) ? existing.images as string[] : [],
+        location:     existing.location ?? '',
+        districtId:   existing.districtId ?? '',
+        featured:     existing.featured,
+        status:       existing.status,
+        capacity:     existing.capacity ?? undefined,
+        availability: existing.availability ?? '',
       });
     }
   }, [existing]);
@@ -140,11 +143,12 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const handleSubmit = () => {
     const payload = {
       ...form,
-      price:      Number(form.price),
-      images:     form.images?.filter(Boolean) ?? [],
-      districtId: form.districtId || undefined,
-      image:      form.image      || undefined,
-      location:   form.location   || undefined,
+      price:        Number(form.price),
+      images:       form.images?.filter(Boolean) ?? [],
+      districtId:   form.districtId || undefined,
+      image:        form.image      || undefined,
+      location:     form.location   || undefined,
+      availability: form.availability || undefined,
     };
     if (isEdit) {
       updateMutation.mutate({ id: experienceId!, data: payload }, { onSuccess: () => router.push(effectiveRedirect) });
@@ -294,6 +298,29 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-1">
             <div>
+              <FieldLabel htmlFor="exp-capacity" hint="Max number of participants">Capacity</FieldLabel>
+              <Input
+                id="exp-capacity"
+                type="number"
+                min={1}
+                placeholder="e.g. 10"
+                value={form.capacity ?? ''}
+                onChange={(e) => set('capacity', e.target.value ? Number(e.target.value) : undefined)}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="exp-availability" hint='e.g. "Daily", "Weekends only"'>Availability</FieldLabel>
+              <Input
+                id="exp-availability"
+                placeholder='e.g. "Daily 8am–5pm"'
+                value={form.availability ?? ''}
+                onChange={(e) => set('availability', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-1">
+            <div>
               <FieldLabel htmlFor="exp-status">Status</FieldLabel>
               <StyledSelect
                 id="exp-status"
@@ -310,7 +337,7 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
                 type="checkbox"
                 checked={form.featured ?? false}
                 onChange={(e) => set('featured', e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-green-600"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-teal-600"
               />
               <div>
                 <label htmlFor="featured" className="text-sm font-medium text-gray-700">Featured</label>

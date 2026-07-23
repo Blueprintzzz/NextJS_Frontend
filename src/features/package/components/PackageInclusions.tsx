@@ -34,7 +34,7 @@ export function PackageInclusions({ inclusions }: Props) {
         return (
           <div key={type} className="rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Icon className="w-4 h-4 text-blue-600" />
+              <Icon className="w-4 h-4 text-teal-600" />
               <span className="text-sm font-medium text-gray-900">{LABELS[type as keyof typeof LABELS]}</span>
             </div>
             <ul className="space-y-1">

@@ -42,7 +42,7 @@ function StyledSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors"
     />
   );
 }
@@ -349,7 +349,7 @@ export function CreatePackageForm() {
                       setSeasonStart(e.target.value);
                       handleSeasonChange(e.target.value, seasonEnd);
                     }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 bg-white"
                   >
                     <option value="">Start month</option>
                     {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -366,7 +366,7 @@ export function CreatePackageForm() {
                       setSeasonEnd(e.target.value);
                       handleSeasonChange(seasonStart, e.target.value);
                     }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 bg-white"
                   >
                     <option value="">End month</option>
                     {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -468,12 +468,12 @@ export function CreatePackageForm() {
             {form.highlights.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {form.highlights.map((h, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 bg-green-50 border border-green-200 text-green-800 rounded-full px-2.5 py-0.5 text-xs">
+                  <span key={i} className="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-800 rounded-full px-2.5 py-0.5 text-xs">
                     {h}
                     <button
                       type="button"
                       onClick={() => set('highlights', form.highlights.filter((_, idx) => idx !== i))}
-                      className="text-green-500 hover:text-red-500 ml-0.5"
+                      className="text-teal-500 hover:text-red-500 ml-0.5"
                     >
                       ×
                     </button>
@@ -609,7 +609,7 @@ export function CreatePackageForm() {
                   <select
                     value={inc.type}
                     onChange={(e) => updateInclusion(i, { type: e.target.value as PackageInclusion['type'] })}
-                    className="shrink-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                    className="shrink-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                   >
                     <option value="MEAL">Meal</option>
                     <option value="TRANSPORT">Transport</option>
@@ -698,7 +698,7 @@ export function CreatePackageForm() {
                     value={pickerSearch}
                     onChange={(e) => setPickerSearch(e.target.value)}
                     placeholder={isDestination ? 'Search districts…' : 'Search experiences…'}
-                    className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50 transition-colors"
+                    className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-teal-300 focus:ring-2 focus:ring-teal-50 transition-colors"
                   />
                 </div>
               </div>
@@ -708,7 +708,7 @@ export function CreatePackageForm() {
                 {/* Loading */}
                 {loadingPicker && (
                   <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
-                    <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-500 rounded-full animate-spin" />
                     <p className="text-xs">Loading from …</p>
                   </div>
                 )}

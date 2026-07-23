@@ -19,7 +19,7 @@ const CATEGORIES: { value: ExperienceCategory | 'ALL'; label: string }[] = [
   { value: 'ROMANTIC', label: 'Romantic' },
 ];
 
-export function ExperienceList() {
+export function ExperienceList({ editBasePath = '/admin/experiences', readonlyFeatured = false }: { editBasePath?: string; readonlyFeatured?: boolean }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<ExperienceCategory | 'ALL'>('ALL');
   const [page, setPage] = useState(1);
@@ -114,16 +114,20 @@ export function ExperienceList() {
                       <td className="px-4 py-3 text-gray-600">{exp.duration}</td>
                       <td className="px-4 py-3 text-gray-500 max-w-[120px] truncate">{exp.location ?? '—'}</td>
                       <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => featureMutation.mutate(exp.id)}
-                          disabled={featureMutation.isPending}
-                          title={exp.featured ? 'Unfeature' : 'Feature'}
-                          className="inline-flex items-center justify-center"
-                        >
-                          <Star
-                            className={`w-4 h-4 ${exp.featured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                          />
-                        </button>
+                        {readonlyFeatured ? (
+                          <Star className={`w-4 h-4 mx-auto ${exp.featured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                        ) : (
+                          <button
+                            onClick={() => featureMutation.mutate(exp.id)}
+                            disabled={featureMutation.isPending}
+                            title={exp.featured ? 'Unfeature' : 'Feature'}
+                            className="inline-flex items-center justify-center"
+                          >
+                            <Star
+                              className={`w-4 h-4 ${exp.featured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                            />
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -134,7 +138,7 @@ export function ExperienceList() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-2">
-                          <Link href={`/admin/experiences/${exp.id}/edit`}>
+                          <Link href={`${editBasePath}/${exp.id}/edit`}>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>

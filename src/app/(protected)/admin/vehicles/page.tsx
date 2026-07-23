@@ -21,7 +21,7 @@ export default function AdminVehiclesPage() {
         <h1 className="text-2xl font-bold text-gray-900">Manage Vehicles</h1>
         <button
           onClick={() => router.push('/admin/vehicles/create')}
-          className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+          className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
         >
           + Create Vehicle
         </button>
@@ -95,7 +95,7 @@ export default function AdminVehiclesPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => router.push(`/admin/vehicles/${v.id}/edit`)}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="p-1.5 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors"
                           aria-label="Edit"
                         >
                           <Pencil className="w-4 h-4" />

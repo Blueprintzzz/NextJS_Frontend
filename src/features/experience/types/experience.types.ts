@@ -11,6 +11,8 @@ export interface Experience {
   districtId?: string | null;
   featured: boolean;
   status: string;
+  capacity?: number | null;
+  availability?: string | null;
   rating?: string | number | null;
   reviewCount?: number | null;
   createdAt: string;

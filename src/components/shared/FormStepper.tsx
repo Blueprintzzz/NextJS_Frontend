@@ -41,7 +41,7 @@ export function FormStepper({ steps, current, onStepClick }: FormStepperProps) {
                 <div
                   className={cn(
                     'absolute top-4 right-1/2 left-0 h-0.5 -translate-y-1/2',
-                    i <= current ? 'bg-green-500' : 'bg-gray-200'
+                    i <= current ? 'bg-teal-500' : 'bg-gray-200'
                   )}
                 />
               )}
@@ -50,7 +50,7 @@ export function FormStepper({ steps, current, onStepClick }: FormStepperProps) {
                 <div
                   className={cn(
                     'absolute top-4 left-1/2 right-0 h-0.5 -translate-y-1/2',
-                    i < current ? 'bg-green-500' : 'bg-gray-200'
+                    i < current ? 'bg-teal-500' : 'bg-gray-200'
                   )}
                 />
               )}
@@ -63,9 +63,9 @@ export function FormStepper({ steps, current, onStepClick }: FormStepperProps) {
                 className={cn(
                   'relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all duration-200',
                   isCompleted
-                    ? 'border-green-500 bg-green-500 text-white cursor-pointer hover:bg-green-600 hover:border-green-600'
+                    ? 'border-teal-500 bg-teal-500 text-white cursor-pointer hover:bg-teal-600 hover:border-teal-600'
                     : isActive
-                    ? 'border-green-500 bg-white text-green-600 shadow-md shadow-green-100'
+                    ? 'border-teal-500 bg-white text-teal-600 shadow-md shadow-teal-100'
                     : 'border-gray-200 bg-white text-gray-400 cursor-default'
                 )}
                 aria-current={isActive ? 'step' : undefined}
@@ -86,7 +86,7 @@ export function FormStepper({ steps, current, onStepClick }: FormStepperProps) {
                   className={cn(
                     'text-xs font-medium leading-tight',
                     isActive
-                      ? 'text-green-700'
+                      ? 'text-teal-700'
                       : isCompleted
                       ? 'text-gray-600'
                       : 'text-gray-400'
@@ -106,7 +106,7 @@ export function FormStepper({ steps, current, onStepClick }: FormStepperProps) {
       {/* Thin full-width progress bar underneath */}
       <div className="mt-4 h-1 w-full rounded-full bg-gray-100 overflow-hidden">
         <div
-          className="h-full rounded-full bg-green-500 transition-all duration-500"
+          className="h-full rounded-full bg-teal-500 transition-all duration-500"
           style={{ width: `${((current) / (steps.length - 1)) * 100}%` }}
         />
       </div>

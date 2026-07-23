@@ -18,7 +18,7 @@ const CATEGORY_COLORS: Record<ExperienceCategory, string> = {
   ADVENTURE: 'bg-orange-100 text-orange-700',
   NATURE: 'bg-green-100 text-green-700',
   CULTURAL: 'bg-purple-100 text-purple-700',
-  RELAXATION: 'bg-blue-100 text-blue-700',
+  RELAXATION: 'bg-teal-100 text-teal-700',
   FAMILY: 'bg-yellow-100 text-yellow-700',
   ROMANTIC: 'bg-pink-100 text-pink-700',
 };

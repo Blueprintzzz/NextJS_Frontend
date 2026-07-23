@@ -16,7 +16,7 @@ export const CATEGORY_COLORS: Record<PackageCategory, string> = {
   NATURE: 'bg-green-100 text-green-800',
   ROMANTIC: 'bg-pink-100 text-pink-800',
   WILDLIFE: 'bg-yellow-100 text-yellow-800',
-  FAMILY: 'bg-blue-100 text-blue-800',
+  FAMILY: 'bg-teal-100 text-teal-800',
   CULTURAL: 'bg-purple-100 text-purple-800',
   BEACH: 'bg-cyan-100 text-cyan-800',
   LUXURY: 'bg-amber-100 text-amber-800',

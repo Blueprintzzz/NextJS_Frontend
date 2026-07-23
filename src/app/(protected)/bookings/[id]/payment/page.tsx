@@ -24,7 +24,7 @@ export default function RecordPaymentPage({ params }: { params: Promise<{ id: st
         <h1 className="text-xl font-semibold text-gray-900">Record Payment</h1>
       </div>
 
-      <div className="mb-4 rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800">
+      <div className="mb-4 rounded-md bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-800">
         Booking <span className="font-mono font-medium">{booking.bookingNumber}</span> —
         remaining balance: <span className="font-bold">{formatCurrency(booking.remainingAmount)}</span>
       </div>
