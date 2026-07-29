@@ -49,7 +49,7 @@ function ItemCard({ item, href, badge }: { item: RecommendedItem; href: string; 
 }
 
 export default function RecommendationsPage() {
-  const orgId = useAppSelector((s) => s.user.currentOrg?.id ?? '');
+  const orgId = useAppSelector((s) => s.user.userId ?? '');
   const [tab, setTab] = useState<Tab>('destinations');
 
   const { data: destinations = [], isLoading: loadingDest } = useQuery<RecommendedItem[]>({

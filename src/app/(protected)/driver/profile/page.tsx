@@ -3,14 +3,14 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
-import type { RootState } from '@/store';
+import type { RootState } from '@/store/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera } from 'lucide-react';
 
 export default function DriverProfilePage() {
-  const user = useSelector((s: RootState) => s.user.user);
+  const user = useSelector((s: RootState) => s.user);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [form, setForm] = useState({

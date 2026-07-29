@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Package, Star, MessageSquare, ShieldCheck, UserCircle, LayoutDashboard, User, Briefcase, DollarSign, ClipboardList, Store, Users, TrendingUp, Bell, ShoppingCart, Sparkles, Home } from 'lucide-react';
+import { Calendar, PlusCircle, Car, MapPin, Map, LayoutGrid, Package, Star, MessageSquare, ShieldCheck, UserCircle, LayoutDashboard, User, DollarSign, ClipboardList, Store, Users, TrendingUp, Bell, ShoppingCart, Sparkles, Home } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -24,21 +24,11 @@ export const sidebarGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Supplier',
-    items: [
-      { label: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard },
-      { label: 'My Profile', href: '/supplier/profile', icon: Store },
-      { label: 'My Experiences', href: '/supplier/experiences', icon: Briefcase },
-      { label: 'Bookings', href: '/supplier/bookings', icon: Calendar },
-    ],
-  },
-  {
     label: 'Driver',
     items: [
       { label: 'Dashboard', href: '/driver/dashboard', icon: LayoutDashboard },
       { label: 'My Profile', href: '/driver/profile', icon: User },
       { label: 'My Vehicles', href: '/driver/vehicles', icon: Car },
-      { label: 'My Experiences', href: '/driver/experiences', icon: Briefcase },
       { label: 'My Packages', href: '/driver/packages', icon: Package },
       { label: 'Booking Requests', href: '/driver/booking-requests', icon: ClipboardList },
       { label: 'My Bookings', href: '/driver/bookings', icon: Calendar },

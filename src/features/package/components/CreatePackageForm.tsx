@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,11 +92,9 @@ export function CreatePackageForm() {
   const [picker, setPicker] = useState<{
     open: boolean;
     dayIndex: number;
-    tag: 'destination' | 'experience' | null;
-  }>({ open: false, dayIndex: 0, tag: null });
+  }>({ open: false, dayIndex: 0 });
 
   const [destinations,   setDestinations]  = useState<{ id: string; name: string }[]>([]);
-  const [experiences,    setExperiences]   = useState<{ id: string; name: string; category?: string }[]>([]);
   const [pickerSearch,   setPickerSearch]  = useState('');
   const [loadingPicker,  setLoadingPicker] = useState(false);
   const [pickerError,    setPickerError]   = useState<string | null>(null);
@@ -119,12 +117,12 @@ export function CreatePackageForm() {
   };
 
   // ── Picker handlers ──────────────────────────────────────────────────────
-  const openPicker = async (dayIndex: number, tag: 'destination' | 'experience') => {
-    setPicker({ open: true, dayIndex, tag });
+  const openPicker = async (dayIndex: number) => {
+    setPicker({ open: true, dayIndex });
     setPickerSearch('');
     setPickerError(null);
 
-    if (tag === 'destination' && destinations.length === 0) {
+    if (destinations.length === 0) {
       setLoadingPicker(true);
       try {
         const data = await apiRequest('/districts');
@@ -136,32 +134,18 @@ export function CreatePackageForm() {
         setLoadingPicker(false);
       }
     }
-
-    if (tag === 'experience' && experiences.length === 0) {
-      setLoadingPicker(true);
-      try {
-        const data = await apiRequest('/experiences');
-        const list = data as { id: string; name: string; category?: string }[];
-        setExperiences(Array.isArray(list) ? list : ((data as { data?: typeof list }).data ?? []));
-      } catch {
-        setPickerError(`Could not load experiences — check NEXT_PUBLIC_API_URL in your .env (${API_URL})`);
-      } finally {
-        setLoadingPicker(false);
-      }
-    }
   };
 
-  const closePicker = () => setPicker({ open: false, dayIndex: 0, tag: null });
+  const closePicker = () => setPicker({ open: false, dayIndex: 0 });
 
   const selectItem = (item: { id: string; name: string }) => {
-    const { dayIndex, tag } = picker;
-    if (!tag) return;
+    const { dayIndex } = picker;
     const day = form.itinerary[dayIndex];
-    const alreadyAdded = day.attractions.some((a) => a.id === item.id && a.tag === tag);
+    const alreadyAdded = day.attractions.some((a) => a.id === item.id);
     if (alreadyAdded) { closePicker(); return; }
     const updated = form.itinerary.map((d, i) =>
       i === dayIndex
-        ? { ...d, attractions: [...d.attractions, { id: item.id, label: item.name, tag }] }
+        ? { ...d, attractions: [...d.attractions, { id: item.id, label: item.name, tag: 'destination' as const }] }
         : d
     );
     set('itinerary', updated);
@@ -176,18 +160,6 @@ export function CreatePackageForm() {
     );
     set('itinerary', updated);
   };
-
-  // ── Create-experience shortcut ───────────────────────────────────────────
-  const goCreateExperience = () => {
-    closePicker();
-    router.push('/admin/experiences/create?returnTo=/packages/create');
-  };
-
-  // Clear experience cache on mount so newly created experiences appear
-  // when the user navigates back from /admin/experiences/create
-  useEffect(() => {
-    setExperiences([]);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addInclusion = () =>
     set('inclusions', [...form.inclusions, { type: 'MEAL', description: '' }]);
@@ -539,17 +511,10 @@ export function CreatePackageForm() {
                     <div className="flex gap-2 mt-1">
                       <button
                         type="button"
-                        onClick={() => openPicker(i, 'destination')}
+                        onClick={() => openPicker(i)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-colors"
                       >
                         🗺️ + Destination
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openPicker(i, 'experience')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 text-xs font-semibold hover:bg-violet-100 transition-colors"
-                      >
-                        ✨ + Experience
                       </button>
                     </div>
 
@@ -559,14 +524,9 @@ export function CreatePackageForm() {
                         {day.attractions.map((attr, attrIdx) => (
                           <span
                             key={attrIdx}
-                            className={[
-                              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                              attr.tag === 'destination'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : 'bg-violet-50  text-violet-700  border-violet-200',
-                            ].join(' ')}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200"
                           >
-                            {attr.tag === 'destination' ? '📍' : '🎯'}
+                            📍
                             {attr.label}
                             <button
                               type="button"
@@ -645,9 +605,7 @@ export function CreatePackageForm() {
 
       {/* ── Picker Modal ─────────────────────────────────────────── */}
       {picker.open && (() => {
-        const isDestination = picker.tag === 'destination';
-        const rawList = isDestination ? destinations : experiences;
-        const filtered = rawList.filter((item) =>
+        const filtered = destinations.filter((item) =>
           item.name.toLowerCase().includes(pickerSearch.toLowerCase())
         );
         return (
@@ -663,18 +621,15 @@ export function CreatePackageForm() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <div className={[
-                    'w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0',
-                    isDestination ? 'bg-emerald-50' : 'bg-violet-50',
-                  ].join(' ')}>
-                    {isDestination ? '🗺️' : '✨'}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-emerald-50">
+                    🗺️
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
                       Day {picker.dayIndex + 1}
                     </p>
                     <p className="text-sm font-bold text-gray-900 leading-tight">
-                      {isDestination ? 'Select a Destination' : 'Select an Experience'}
+                      Select a Destination
                     </p>
                   </div>
                 </div>
@@ -697,7 +652,7 @@ export function CreatePackageForm() {
                     type="text"
                     value={pickerSearch}
                     onChange={(e) => setPickerSearch(e.target.value)}
-                    placeholder={isDestination ? 'Search districts…' : 'Search experiences…'}
+                    placeholder="Search districts…"
                     className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-teal-300 focus:ring-2 focus:ring-teal-50 transition-colors"
                   />
                 </div>
@@ -726,13 +681,9 @@ export function CreatePackageForm() {
                 {/* Empty */}
                 {!loadingPicker && !pickerError && filtered.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 gap-2">
-                    <span className="text-3xl opacity-30">{isDestination ? '🗺️' : '✨'}</span>
+                    <span className="text-3xl opacity-30">🗺️</span>
                     <p className="text-sm text-gray-400 text-center px-6">
-                      {pickerSearch
-                        ? `No results for "${pickerSearch}"`
-                        : isDestination
-                          ? 'No districts returned from the API'
-                          : 'No experiences returned from the API'}
+                      {pickerSearch ? `No results for "${pickerSearch}"` : 'No districts returned from the API'}
                     </p>
                   </div>
                 )}
@@ -740,10 +691,7 @@ export function CreatePackageForm() {
                 {/* Items */}
                 {!loadingPicker && !pickerError && filtered.map((item) => {
                   const day = form.itinerary[picker.dayIndex];
-                  const alreadyAdded = day?.attractions.some(
-                    (a) => a.id === item.id && a.tag === picker.tag
-                  );
-                  const category = (item as { category?: string }).category;
+                  const alreadyAdded = day?.attractions.some((a) => a.id === item.id);
                   return (
                     <button
                       key={item.id}
@@ -758,65 +706,27 @@ export function CreatePackageForm() {
                           : 'hover:bg-gray-50 cursor-pointer',
                       ].join(' ')}
                     >
-                      {/* Left: name + category badge */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm flex-shrink-0">
-                          {isDestination ? '📍' : '🎯'}
-                        </span>
+                        <span className="text-sm flex-shrink-0">📍</span>
                         <span className="font-medium text-gray-800 truncate">{item.name}</span>
-                        {category && (
-                          <span className={[
-                            'flex-shrink-0 text-xs px-1.5 py-0.5 rounded-md font-medium',
-                            isDestination
-                              ? 'bg-emerald-50 text-emerald-600'
-                              : 'bg-violet-50 text-violet-600',
-                          ].join(' ')}>
-                            {category}
-                          </span>
-                        )}
                       </div>
-
-                      {/* Right: added check or + */}
                       {alreadyAdded ? (
                         <span className="flex-shrink-0 text-xs font-semibold text-emerald-500">✓</span>
                       ) : (
-                        <span className={[
-                          'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center',
-                          'text-sm font-bold transition-colors',
-                          isDestination
-                            ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200'
-                            : 'bg-violet-100 text-violet-700 group-hover:bg-violet-200',
-                        ].join(' ')}>
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors bg-emerald-100 text-emerald-700">
                           +
                         </span>
                       )}
                     </button>
                   );
                 })}
-
-                {/* Create new experience shortcut — only shown in experience picker */}
-                {!isDestination && (
-                  <div className="sticky bottom-0 pt-2 mt-1 border-t border-gray-100 bg-white">
-                    <button
-                      type="button"
-                      onClick={goCreateExperience}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors cursor-pointer"
-                    >
-                      <span className="text-base">＋</span>
-                      Create New Experience
-                      <span className="text-xs font-normal text-violet-500 ml-1">→ comes back here</span>
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Footer */}
               {!loadingPicker && !pickerError && filtered.length > 0 && (
                 <div className="px-5 py-3 border-t border-gray-100 flex-shrink-0 bg-gray-50">
                   <p className="text-xs text-gray-400 text-center">
-                    {filtered.length}{' '}
-                    {isDestination ? 'district' : 'experience'}
-                    {filtered.length !== 1 ? 's' : ''} available
+                    {filtered.length} district{filtered.length !== 1 ? 's' : ''} available
                   </p>
                 </div>
               )}

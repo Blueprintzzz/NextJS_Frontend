@@ -177,10 +177,10 @@ export default function ExperienceDetailPage() {
                 </div>
 
                 <Link
-                  href="/bookings/create"
+                  href="/contact-us"
                   className="block w-full text-center py-3 px-6 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors text-sm"
                 >
-                  Book This Experience
+                  Contact Us
                 </Link>
                 <Link
                   href="/contact-us"

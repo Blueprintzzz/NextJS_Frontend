@@ -41,7 +41,7 @@ export default function DriverOffersPage({ params }: { params: Promise<{ booking
   const { bookingId } = use(params);
   const router = useRouter();
   const qc = useQueryClient();
-  const orgId = useAppSelector((s) => s.user.currentOrg?.id ?? '');
+  const orgId = useAppSelector((s) => s.user.userId ?? '');
 
   const { data: offers = [], isLoading } = useQuery<DriverOffer[]>({
     queryKey: ['driver-offers', bookingId, orgId],

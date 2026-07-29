@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, User, Car, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, User, Car } from 'lucide-react';
 import { authApi } from '@/lib/api';
 
-type Role = 'TOURIST' | 'DRIVER' | 'SUPPLIER';
+type Role = 'TOURIST' | 'DRIVER';
 
 const ROLES: { value: Role; label: string; description: string; icon: React.ReactNode }[] = [
   {
@@ -20,12 +20,6 @@ const ROLES: { value: Role; label: string; description: string; icon: React.Reac
     label: 'Driver',
     description: 'Offer transport & packages',
     icon: <Car className="w-5 h-5" />,
-  },
-  {
-    value: 'SUPPLIER',
-    label: 'Experience Supplier',
-    description: 'Publish experiences',
-    icon: <Sparkles className="w-5 h-5" />,
   },
 ];
 
@@ -61,7 +55,7 @@ export default function RegisterPage() {
         <div className="max-w-sm text-center">
           <h1 className="text-4xl font-bold mb-4">Join GamanLk</h1>
           <p className="text-teal-200 text-lg leading-relaxed">
-            Whether you&apos;re a traveller, driver, or experience provider — GamanLk connects you to Sri Lanka&apos;s best tourism network.
+            Whether you&apos;re a traveller or driver — GamanLk connects you to Sri Lanka&apos;s best tourism network.
           </p>
           <div className="mt-10 space-y-3 text-left">
             {ROLES.map((r) => (
@@ -95,7 +89,7 @@ export default function RegisterPage() {
             {/* Role Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">I am a…</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {ROLES.map((r) => (
                   <button
                     key={r.value}

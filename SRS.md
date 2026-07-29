@@ -476,3 +476,5 @@ Search by:
 
 This structure is simple, comprehensive, and well-suited for a university project SRS without following the formal IEEE template.refer this doc and list down the all the pages must have develop for the system 
 
+o
+ooo

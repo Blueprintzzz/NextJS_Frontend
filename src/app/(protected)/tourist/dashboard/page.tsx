@@ -7,7 +7,8 @@ import { BookingStatusBadge } from '@/features/booking/components/BookingStatusB
 import { formatCurrency } from '@/features/booking/utils/booking.utils';
 
 export default function TouristDashboardPage() {
-  const user = useAppSelector((s) => s.user.user);
+  const user = useAppSelector((s) => s.user);
+  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined;
   const { data: bookingsData, isLoading } = useBookingData({ limit: 5 });
 
   const upcoming = bookingsData.data.filter((b) =>
@@ -20,7 +21,7 @@ export default function TouristDashboardPage() {
       {/* Welcome */}
       <div className="bg-gradient-to-r from-teal-600 to-teal-500 rounded-2xl p-6 text-white">
         <p className="text-teal-100 text-sm">Welcome back</p>
-        <h1 className="text-2xl font-bold mt-1">{user?.name ?? 'Traveller'} 👋</h1>
+        <h1 className="text-2xl font-bold mt-1">{userName ?? 'Traveller'} 👋</h1>
         <p className="text-teal-100 text-sm mt-1">{user?.email}</p>
         <div className="flex gap-3 mt-4">
           <Link href="/tours/customize" className="bg-white text-teal-700 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-teal-50 transition-colors">

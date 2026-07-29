@@ -10,11 +10,12 @@ import { toast } from 'sonner';
 type Tab = 'profile' | 'password';
 
 export default function TouristProfilePage() {
-  const user = useAppSelector((s) => s.user.user);
+  const user = useAppSelector((s) => s.user);
+  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined;
   const [tab, setTab] = useState<Tab>('profile');
 
   // Profile form
-  const [name, setName] = useState(user?.name ?? '');
+  const [name, setName] = useState(userName ?? '');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -58,10 +59,10 @@ export default function TouristProfilePage() {
       {/* Avatar */}
       <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center gap-5">
         <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center text-3xl font-bold text-teal-600 flex-shrink-0">
-          {(user?.name ?? 'T').charAt(0).toUpperCase()}
+          {(userName ?? 'T').charAt(0).toUpperCase()}
         </div>
         <div>
-          <p className="font-semibold text-gray-900">{user?.name ?? '—'}</p>
+          <p className="font-semibold text-gray-900">{userName ?? '—'}</p>
           <p className="text-sm text-gray-500">{user?.email}</p>
           <label className="mt-2 inline-block cursor-pointer">
             <span className="text-xs text-teal-600 font-medium hover:underline">Change photo</span>

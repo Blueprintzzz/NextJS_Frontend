@@ -24,10 +24,11 @@ function getCart(): CartItem[] {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const user = useAppSelector((s) => s.user.user);
+  const user = useAppSelector((s) => s.user);
+  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined;
   const [items] = useState<CartItem[]>(getCart);
 
-  const [name, setName] = useState(user?.name ?? '');
+  const [name, setName] = useState(userName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [phone, setPhone] = useState('');
   const [startDate, setStartDate] = useState('');
