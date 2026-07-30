@@ -1,4 +1,3 @@
-import { apiRequest } from '@/lib/api';
 import type {
   TourPackage,
   PackageFilters,
@@ -6,97 +5,334 @@ import type {
   CreatePackageInput,
 } from '../types/package.types';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
 const EMPTY_PAGE: PackagePaginationResponse = { data: [], total: 0, page: 1, limit: 10, pages: 0 };
 
-function buildQuery(params?: Record<string, unknown>): string {
-  if (!params) return '';
-  const q = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => v != null && q.set(k, String(v)));
-  const s = q.toString();
-  return s ? `?${s}` : '';
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const raw = localStorage.getItem('tfx_auth');
+  if (!raw) return {};
+  try {
+    const { accessToken } = JSON.parse(raw) as { accessToken?: string };
+    if (!accessToken) return {};
+    return {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    };
+  } catch {
+    return {};
+  }
+}
+
+// Backend returns itineraries[] and inclusions[].inclusion — map to frontend shape
+function mapPackage(data: Record<string, unknown>): TourPackage {
+  const pkg = { ...data } as TourPackage & {
+    itineraries?: { day: number; title: string; description: string; attractions?: string }[];
+    inclusions?: { type: string; inclusion?: string; description?: string }[];
+  };
+
+  if (pkg.itineraries) {
+    pkg.itinerary = pkg.itineraries.map((item) => ({
+      day: item.day,
+      title: item.title,
+      description: item.description,
+      attractions: item.attractions
+        ? item.attractions.split(', ').map((label, i) => ({
+            id: String(i),
+            label,
+            tag: 'destination' as const,
+          }))
+        : [],
+    }));
+  }
+
+  if (pkg.inclusions) {
+    pkg.inclusions = pkg.inclusions.map((inc) => ({
+      type: inc.type as TourPackage['inclusions'][number]['type'],
+      description: inc.inclusion ?? inc.description ?? '',
+    }));
+  }
+
+  return pkg as TourPackage;
 }
 
 export const PackageAPI = {
-  async getPackages(filters?: PackageFilters): Promise<PackagePaginationResponse> {
+  async getAll(filters?: PackageFilters): Promise<PackagePaginationResponse> {
     try {
-      const raw = await apiRequest(`/packages${buildQuery(filters as Record<string, unknown>)}`);
-      return (raw as PackagePaginationResponse) ?? EMPTY_PAGE;
+      const params = new URLSearchParams();
+      if (filters?.category)    params.set('category',    filters.category);
+      if (filters?.minPrice)    params.set('minPrice',    String(filters.minPrice));
+      if (filters?.maxPrice)    params.set('maxPrice',    String(filters.maxPrice));
+      if (filters?.minDuration) params.set('minDuration', String(filters.minDuration));
+      if (filters?.maxDuration) params.set('maxDuration', String(filters.maxDuration));
+      if (filters?.search)      params.set('search',      filters.search);
+      if (filters?.page)        params.set('page',        String(filters.page));
+      if (filters?.limit)       params.set('limit',       String(filters.limit));
+      const qs = params.toString();
+      const res = await fetch(`${API_URL}/packages${qs ? `?${qs}` : ''}`);
+      if (!res.ok) return EMPTY_PAGE;
+      const raw = await res.json() as PackagePaginationResponse & { data?: unknown[] };
+      if (!raw?.data) return EMPTY_PAGE;
+      return {
+        ...raw,
+        data: raw.data.map((p) => mapPackage(p as Record<string, unknown>)),
+      };
     } catch {
       return EMPTY_PAGE;
     }
   },
 
-  async getFeaturedPackages(): Promise<TourPackage[]> {
+  // Legacy alias used by existing hooks
+  async getPackages(filters?: PackageFilters): Promise<PackagePaginationResponse> {
+    return PackageAPI.getAll(filters);
+  },
+
+  async getFeatured(): Promise<TourPackage[]> {
     try {
-      const raw = await apiRequest('/packages/featured');
-      return Array.isArray(raw) ? (raw as TourPackage[]) : [];
+      const res = await fetch(`${API_URL}/packages/featured`);
+      if (!res.ok) return [];
+      const raw = await res.json() as unknown[];
+      return Array.isArray(raw)
+        ? raw.map((p) => mapPackage(p as Record<string, unknown>))
+        : [];
     } catch {
       return [];
     }
   },
 
-  async getPackageById(id: string): Promise<TourPackage | null> {
+  // Legacy alias
+  async getFeaturedPackages(): Promise<TourPackage[]> {
+    return PackageAPI.getFeatured();
+  },
+
+  async getById(id: string): Promise<TourPackage | null> {
     try {
-      return (await apiRequest(`/packages/${id}`)) as TourPackage;
+      const res = await fetch(`${API_URL}/packages/${id}`);
+      if (!res.ok) return null;
+      return mapPackage(await res.json() as Record<string, unknown>);
     } catch {
       return null;
     }
   },
 
-  async getPackagesByCategory(category: string): Promise<TourPackage[]> {
+  // Legacy alias
+  async getPackageById(id: string): Promise<TourPackage | null> {
+    return PackageAPI.getById(id);
+  },
+
+  async getByCategory(
+    category: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PackagePaginationResponse> {
     try {
-      const raw = await apiRequest(`/packages?category=${category}`);
-      const page = raw as PackagePaginationResponse;
-      return Array.isArray(page?.data) ? page.data : [];
+      const res = await fetch(
+        `${API_URL}/packages/category/${category}?page=${page}&limit=${limit}`,
+      );
+      if (!res.ok) return EMPTY_PAGE;
+      const raw = await res.json() as PackagePaginationResponse & { data?: unknown[] };
+      if (!raw?.data) return EMPTY_PAGE;
+      return {
+        ...raw,
+        data: raw.data.map((p) => mapPackage(p as Record<string, unknown>)),
+      };
     } catch {
-      return [];
+      return EMPTY_PAGE;
     }
   },
 
+  // Legacy alias
+  async getPackagesByCategory(category: string): Promise<TourPackage[]> {
+    const result = await PackageAPI.getByCategory(category);
+    return result.data;
+  },
+
+  async create(input: CreatePackageInput): Promise<TourPackage> {
+    const body = {
+      name:        input.name,
+      description: input.description,
+      category:    input.category,
+      duration:    input.duration,
+      basePrice:   input.basePrice,
+      highlights:  input.highlights,
+      bestSeason:  input.bestSeason,
+      maxCapacity: input.maxCapacity,
+      images:      input.images,
+      status:      input.status,
+    };
+
+    const res = await fetch(`${API_URL}/packages`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { message?: string };
+      throw new Error(err.message ?? 'Failed to create package');
+    }
+    const pkg = await res.json() as { id: string };
+
+    // Add itinerary days one by one
+    for (const day of input.itinerary ?? []) {
+      await fetch(`${API_URL}/packages/${pkg.id}/itinerary`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          day:         day.day,
+          title:       day.title,
+          description: day.description,
+          attractions: day.attractions.map((a) => a.label).join(', '),
+        }),
+      });
+    }
+
+    // Add inclusions one by one
+    for (const inc of input.inclusions ?? []) {
+      await fetch(`${API_URL}/packages/${pkg.id}/inclusions`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          inclusion: inc.description,
+          type:      inc.type,
+        }),
+      });
+    }
+
+    return mapPackage(pkg as Record<string, unknown>);
+  },
+
+  // Legacy alias
   async createPackage(data: CreatePackageInput): Promise<TourPackage> {
-    return apiRequest('/packages', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }) as Promise<TourPackage>;
+    return PackageAPI.create(data);
   },
 
+  async update(id: string, input: Partial<CreatePackageInput>): Promise<TourPackage> {
+    const res = await fetch(`${API_URL}/packages/${id}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { message?: string };
+      throw new Error(err.message ?? 'Failed to update package');
+    }
+    return mapPackage(await res.json() as Record<string, unknown>);
+  },
+
+  // Legacy alias
   async updatePackage(id: string, data: Partial<CreatePackageInput>): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }) as Promise<TourPackage>;
+    return PackageAPI.update(id, data);
   },
 
+  async delete(id: string): Promise<void> {
+    const res = await fetch(`${API_URL}/packages/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to delete package');
+  },
+
+  // Legacy alias
   async deletePackage(id: string): Promise<void> {
-    await apiRequest(`/packages/${id}`, { method: 'DELETE' });
+    return PackageAPI.delete(id);
   },
 
-  async addItineraryDay(id: string, data: Record<string, unknown>): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}/itinerary`, {
+  async feature(id: string): Promise<TourPackage> {
+    const res = await fetch(`${API_URL}/packages/${id}/feature`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }) as Promise<TourPackage>;
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to feature package');
+    return mapPackage(await res.json() as Record<string, unknown>);
   },
 
-  async updateItineraryDay(id: string, day: number, data: Record<string, unknown>): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}/itinerary/${day}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }) as Promise<TourPackage>;
-  },
-
-  async updateInclusions(id: string, data: Record<string, unknown>): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}/inclusions`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }) as Promise<TourPackage>;
-  },
-
+  // Legacy alias
   async featurePackage(id: string): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}/feature`, { method: 'POST' }) as Promise<TourPackage>;
+    return PackageAPI.feature(id);
   },
 
+  async deactivate(id: string): Promise<TourPackage> {
+    const res = await fetch(`${API_URL}/packages/${id}/deactivate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to deactivate package');
+    return mapPackage(await res.json() as Record<string, unknown>);
+  },
+
+  // Legacy alias
   async deactivatePackage(id: string): Promise<TourPackage> {
-    return apiRequest(`/packages/${id}/deactivate`, { method: 'POST' }) as Promise<TourPackage>;
+    return PackageAPI.deactivate(id);
+  },
+
+  async addItinerary(
+    packageId: string,
+    day: { day: number; title: string; description: string; attractions: { label: string }[] },
+  ): Promise<void> {
+    await fetch(`${API_URL}/packages/${packageId}/itinerary`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        day:         day.day,
+        title:       day.title,
+        description: day.description,
+        attractions: day.attractions.map((a) => a.label).join(', '),
+      }),
+    });
+  },
+
+  // Legacy alias
+  async addItineraryDay(id: string, data: Record<string, unknown>): Promise<void> {
+    await fetch(`${API_URL}/packages/${id}/itinerary`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateItinerary(
+    packageId: string,
+    dayNumber: number,
+    data: Partial<{ title: string; description: string; attractions: { label: string }[] }>,
+  ): Promise<void> {
+    const body: Record<string, unknown> = { ...data };
+    if (data.attractions) {
+      body.attractions = data.attractions.map((a) => a.label).join(', ');
+    }
+    await fetch(`${API_URL}/packages/${packageId}/itinerary/${dayNumber}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+  },
+
+  // Legacy alias
+  async updateItineraryDay(id: string, day: number, data: Record<string, unknown>): Promise<void> {
+    await fetch(`${API_URL}/packages/${id}/itinerary/${day}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+  },
+
+  async addInclusion(
+    packageId: string,
+    inc: { description: string; type: string },
+  ): Promise<void> {
+    await fetch(`${API_URL}/packages/${packageId}/inclusions`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ inclusion: inc.description, type: inc.type }),
+    });
+  },
+
+  // Legacy alias
+  async updateInclusions(id: string, data: Record<string, unknown>): Promise<void> {
+    await fetch(`${API_URL}/packages/${id}/inclusions`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
   },
 };
