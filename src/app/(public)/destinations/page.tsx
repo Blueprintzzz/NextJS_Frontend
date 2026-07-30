@@ -2,10 +2,16 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Search, Grid3X3, List, MapPin } from 'lucide-react';
 import { DestinationCard } from '@/components/public/cards/DestinationCard';
 import { AttractionCard, CategoryFilter, useDistricts, useAttractions } from '@/features/destination';
 import type { AttractionCategory } from '@/features/destination';
+
+const LeafletMap = dynamic(
+  () => import('@/features/destination/components/LeafletMap').then((m) => ({ default: m.LeafletMap })),
+  { ssr: false, loading: () => <div className="h-[1000px] bg-gray-100 animate-pulse rounded-xl" /> }
+);
 
 const ATTRACTION_CATEGORIES: { value: AttractionCategory | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'All' },
@@ -102,6 +108,16 @@ export default function DestinationsPage() {
         </div>
       </section>
 
+      {/* Map */}
+      <section className="py-12 bg-white" style={{ isolation: 'isolate' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Explore on the Map</h2>
+          <div className="h-[1000px] rounded-xl overflow-hidden shadow-sm">
+            <LeafletMap />
+          </div>
+        </div>
+      </section>
+
       {/* Destinations Grid */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,7 +189,7 @@ export default function DestinationsPage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Top Attractions Across Sri Lanka</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Top Destinations Across Sri Lanka</h2>
             <p className="text-gray-600">Explore must-see places handpicked by our local experts</p>
           </div>
 
