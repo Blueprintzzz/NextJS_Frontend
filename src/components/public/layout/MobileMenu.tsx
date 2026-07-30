@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Info, MapPin, Compass, Package, Mail, Search, Car } from 'lucide-react';
+import { Menu, X, Home, Info, MapPin, Compass, Package, Mail, Search, Car, LogOut, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/features/auth';
 
 interface MobileMenuProps {
   onSearchClick?: () => void;
@@ -22,6 +23,7 @@ const navItems = [
 export function MobileMenu({ onSearchClick }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <div className="md:hidden">
@@ -68,6 +70,41 @@ export function MobileMenu({ onSearchClick }: MobileMenuProps) {
                 Search
               </button>
             )}
+            <div className="border-t border-gray-100 pt-2 mt-2">
+              {isAuthenticated && user ? (
+                <>
+                  <p className="px-4 py-2 text-xs text-gray-400 font-medium">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <button
+                    onClick={() => { setIsOpen(false); logout(); }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-teal-600"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-teal-600 rounded-lg hover:bg-teal-50"
+                  >
+                    <User className="w-5 h-5" />
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50"
+                  >
+                    <User className="w-5 h-5" />
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       )}

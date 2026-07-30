@@ -2,11 +2,49 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, User } from 'lucide-react';
+import { Search, User, LogOut } from 'lucide-react';
 import { Navigation } from './Navigation';
 import { MobileMenu } from './MobileMenu';
+import { useAuth } from '@/features/auth';
 
 export function PublicHeader() {
+  const { user, isAuthenticated, logout } = useAuth();
+
+  function AuthButtons() {
+    if (isAuthenticated && user) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline text-sm font-medium text-gray-700">
+            {user.firstName}
+          </span>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/login"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-600 border border-teal-600 rounded-lg hover:bg-teal-50 transition-colors"
+        >
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Sign In</span>
+        </Link>
+        <Link
+          href="/register"
+          className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+        >
+          Register
+        </Link>
+      </div>
+    );
+  }
   return (
     <header className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -38,13 +76,7 @@ export function PublicHeader() {
           >
             <Search className="w-5 h-5" />
           </button>
-          <Link
-            href="/login"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-600 border border-teal-600 rounded-lg hover:bg-teal-50 transition-colors"
-          >
-            <User className="w-4 h-4" />
-            <span className="hidden sm:inline">Sign In</span>
-          </Link>
+          <AuthButtons />
           <MobileMenu />
         </div>
       </div>
