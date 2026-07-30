@@ -24,6 +24,7 @@ import { ThemeProvider } from 'next-themes';
 import { StoreProvider } from '@/store/StoreProvider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sonner } from '@/components/ui/sonner';
+import { AuthInitializer } from '@/components/shared/AuthInitializer';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -70,8 +71,8 @@ export function Providers({ children }: ProvidersProps) {
           disableTransitionOnChange
         >
           <TooltipProvider>
+            <AuthInitializer />
             {children}
-            {/* Global toast notification renderer */}
             <Sonner />
           </TooltipProvider>
         </ThemeProvider>

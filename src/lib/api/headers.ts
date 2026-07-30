@@ -1,9 +1,16 @@
 import { getAuthToken } from './storeContext';
 
-// TODO: re-enable getCurrentUserData when backend is ready to accept custom headers
-// import { getCurrentUserData } from './storeContext';
-
 export type HeadersRecord = Record<string, string>;
+
+/** Convenience helper for feature API calls that need auth headers. */
+export function getAuthHeaders(): HeadersRecord {
+  const token = getAuthToken();
+  if (!token) return {};
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+}
 
 export function buildJsonHeaders(
   _endpoint: string,

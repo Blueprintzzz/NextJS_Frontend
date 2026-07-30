@@ -1,19 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
-import { setUser, setToken } from '@/store/slices/userSlice';
-import { localStorageSetJSON } from '@/lib/utils/localStorage';
+import { setAuth } from '@/store/slices/userSlice';
+import { authApi } from '@/lib/api';
 
 const ROLE_REDIRECTS: Record<string, string> = {
   ADMIN: '/admin/dashboard',
   DRIVER: '/driver/dashboard',
-  SUPPLIER: '/driver/dashboard',
-  TOURIST: '/bookings',
-  USER: '/bookings',
+  TOURIST: '/tourist/dashboard',
 };
 
 export default function LoginPage() {
@@ -24,34 +22,33 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+
+  const registered = searchParams.get('registered') === 'true';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
-      // DEV BYPASS — replace with real auth API call when backend is ready
-      const fakeRole = email.includes('admin') ? 'ADMIN' : email.includes('driver') ? 'DRIVER' : 'TOURIST';
-      const fakeToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-        btoa(JSON.stringify({ sub: '1', email, role: fakeRole, exp: Math.floor(Date.now() / 1000) + 86400 })).replace(/=/g, '') +
-        '.fake';
-      const fakeUser = {
-        email,
-        role: fakeRole,
-        token: fakeToken,
-        baseToken: fakeToken,
-        tokens: { accessToken: fakeToken },
-        isAuthenticated: true,
-      };
-      localStorageSetJSON('user', fakeUser);
-      dispatch(setUser(fakeUser));
-      dispatch(setToken(fakeToken));
-      router.replace(ROLE_REDIRECTS[fakeRole] ?? '/bookings');
-    } catch {
-      setError('Invalid email or password. Please try again.');
+      const response = await authApi.login({ email, password });
+
+      localStorage.setItem('tfx_auth', JSON.stringify({
+        user: response.user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      }));
+
+      dispatch(setAuth({
+        user: response.user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      }));
+
+      router.replace(ROLE_REDIRECTS[response.user.role] ?? '/bookings');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -81,6 +78,12 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
             <p className="text-gray-500 mt-1 text-sm">Sign in to your GamanLk account</p>
           </div>
+
+          {registered && (
+            <p className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              Account created successfully. Please sign in.
+            </p>
+          )}
 
           {error && (
             <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">

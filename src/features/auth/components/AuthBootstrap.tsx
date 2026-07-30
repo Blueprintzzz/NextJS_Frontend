@@ -2,21 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setUser, setToken, clearUser } from '@/store/slices/userSlice';
+import { useAppDispatch } from '@/store/hooks';
+import { setAuth, clearAuth } from '@/store/slices/userSlice';
 import { localStorageGetJSON } from '@/lib/utils/localStorage';
 import { decodeTokenPayload } from '../utils/authUtils';
+import type { AuthUser } from '../types/auth.types';
 
-interface PersistedUser {
-  token?: string;
-  tokens?: { accessToken?: string };
-  baseToken?: string;
-  email?: string;
-  userId?: string;
-  firstName?: string;
-  lastName?: string;
-  role?: string;
-  [key: string]: unknown;
+interface TfxAuth {
+  user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
 }
 
 function isTokenValid(token: string): boolean {
@@ -32,21 +27,23 @@ function isTokenValid(token: string): boolean {
 export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const userData = localStorageGetJSON<PersistedUser>('user');
-    const token = userData?.tokens?.accessToken ?? userData?.token ?? userData?.baseToken ?? '';
+    const stored = localStorageGetJSON<TfxAuth>('tfx_auth');
+    const token = stored?.accessToken ?? '';
 
     if (!token || !isTokenValid(token)) {
-      dispatch(clearUser());
+      dispatch(clearAuth());
       router.replace('/login');
       return;
     }
 
-    dispatch(setUser(userData as Record<string, unknown>));
-    dispatch(setToken(token));
+    dispatch(setAuth({
+      user: stored!.user,
+      accessToken: stored!.accessToken,
+      refreshToken: stored!.refreshToken,
+    }));
     setChecked(true);
   }, [dispatch, router]);
 
@@ -54,10 +51,9 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!checked) return;
     const interval = setInterval(() => {
-      const userData = localStorageGetJSON<PersistedUser>('user');
-      const token = userData?.tokens?.accessToken ?? userData?.token ?? '';
-      if (!token || !isTokenValid(token)) {
-        dispatch(clearUser());
+      const stored = localStorageGetJSON<TfxAuth>('tfx_auth');
+      if (!stored?.accessToken || !isTokenValid(stored.accessToken)) {
+        dispatch(clearAuth());
         router.replace('/login');
       }
     }, 5 * 60 * 1000);
@@ -67,8 +63,8 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   // Cross-tab logout
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'user' && !e.newValue) {
-        dispatch(clearUser());
+      if (e.key === 'tfx_auth' && !e.newValue) {
+        dispatch(clearAuth());
         router.replace('/login');
       }
     };

@@ -8,6 +8,7 @@
 // Core
 export { apiRequest } from './request';
 export { ApiError } from './errors';
+export { getAuthHeaders } from './headers';
 
 // Framework domains
 export { authApi } from './domains/auth';
