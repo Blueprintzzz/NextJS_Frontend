@@ -5,9 +5,14 @@ import {
   Droplets,
   Landmark,
   PawPrint,
+  Building2,
   type LucideIcon,
 } from 'lucide-react';
-import type { Attraction, AttractionCategory, WeatherInfo } from '../types/destination.types';
+import type { Destination, DestinationCategory } from '../types/destination.types';
+
+type WeatherInfo = NonNullable<Destination['weatherInfo']>;
+type Attraction = Destination;
+type AttractionCategory = DestinationCategory;
 
 export function getCategoryColor(category: AttractionCategory): string {
   const map: Record<AttractionCategory, string> = {
@@ -17,6 +22,8 @@ export function getCategoryColor(category: AttractionCategory): string {
     WATERFALL: 'bg-cyan-100 text-cyan-700',
     HISTORIC: 'bg-amber-100 text-amber-700',
     WILDLIFE: 'bg-green-100 text-green-700',
+    CITY: 'bg-blue-100 text-blue-700',
+    NATURE: 'bg-emerald-100 text-emerald-700',
   };
   return map[category] ?? 'bg-gray-100 text-gray-700';
 }
@@ -29,6 +36,8 @@ export function getCategoryIcon(category: AttractionCategory): LucideIcon {
     WATERFALL: Droplets,
     HISTORIC: Landmark,
     WILDLIFE: PawPrint,
+    CITY: Building2,
+    NATURE: TreePine,
   };
   return map[category] ?? TreePine;
 }
@@ -41,6 +50,8 @@ export function getAttractionCategoryLabel(category: AttractionCategory): string
     WATERFALL: 'Waterfall',
     HISTORIC: 'Historic Site',
     WILDLIFE: 'Wildlife',
+    CITY: 'City',
+    NATURE: 'Nature',
   };
   return map[category];
 }
