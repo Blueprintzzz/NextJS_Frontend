@@ -125,11 +125,11 @@ export function CreatePackageForm() {
     if (destinations.length === 0) {
       setLoadingPicker(true);
       try {
-        const data = await apiRequest('/districts');
+        const data = await apiRequest('/destinations');
         const list = data as { id: string; name: string }[];
         setDestinations(Array.isArray(list) ? list : ((data as { data?: typeof list }).data ?? []));
       } catch {
-        setPickerError(`Could not load districts — check NEXT_PUBLIC_API_URL in your .env (${API_URL})`);
+        setPickerError(`Could not load destinations — check NEXT_PUBLIC_API_URL in your .env (${API_URL})`);
       } finally {
         setLoadingPicker(false);
       }
@@ -652,7 +652,7 @@ export function CreatePackageForm() {
                     type="text"
                     value={pickerSearch}
                     onChange={(e) => setPickerSearch(e.target.value)}
-                    placeholder="Search districts…"
+                    placeholder="Search destinations…"
                     className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-teal-300 focus:ring-2 focus:ring-teal-50 transition-colors"
                   />
                 </div>
@@ -683,7 +683,7 @@ export function CreatePackageForm() {
                   <div className="flex flex-col items-center justify-center py-12 gap-2">
                     <span className="text-3xl opacity-30">🗺️</span>
                     <p className="text-sm text-gray-400 text-center px-6">
-                      {pickerSearch ? `No results for "${pickerSearch}"` : 'No districts returned from the API'}
+                      {pickerSearch ? `No results for "${pickerSearch}"` : 'No destinations returned from the API'}
                     </p>
                   </div>
                 )}
@@ -726,7 +726,7 @@ export function CreatePackageForm() {
               {!loadingPicker && !pickerError && filtered.length > 0 && (
                 <div className="px-5 py-3 border-t border-gray-100 flex-shrink-0 bg-gray-50">
                   <p className="text-xs text-gray-400 text-center">
-                    {filtered.length} district{filtered.length !== 1 ? 's' : ''} available
+                    {filtered.length} destination{filtered.length !== 1 ? 's' : ''} available
                   </p>
                 </div>
               )}

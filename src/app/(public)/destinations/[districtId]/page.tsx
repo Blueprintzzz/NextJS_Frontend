@@ -3,11 +3,11 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { DistrictDetail, useDistrictById } from '@/features/destination';
+import { DistrictDetail, useDestinationById } from '@/features/destination';
 
 export default function DestinationDetailPage() {
   const { districtId } = useParams<{ districtId: string }>();
-  const { data: district, isLoading, isError } = useDistrictById(districtId);
+  const { data: district, isLoading, isError } = useDestinationById(districtId);
 
   if (isLoading) {
     return (

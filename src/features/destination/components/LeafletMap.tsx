@@ -1,46 +1,33 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { API_URL } from '@/lib/api/config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Category = 'TEMPLE' | 'BEACH' | 'MOUNTAIN' | 'WATERFALL' | 'HISTORIC' | 'WILDLIFE';
+type Category = 'TEMPLE' | 'BEACH' | 'MOUNTAIN' | 'WATERFALL' | 'HISTORIC' | 'WILDLIFE' | 'CITY' | 'NATURE';
 
-interface MapAttraction {
+interface MapDestination {
   id: string;
   name: string;
   category: Category;
   latitude: number;
   longitude: number;
   description: string;
-  travelTips: string;
-  estimatedVisitingTime: string;
-  entryFee: number;
+  travelTips?: string;
+  estimatedVisitingTime?: string;
+  entryFee?: number;
   openingHours?: string;
   images: string[];
-  district?: { name: string };
-}
-
-interface MapDistrict {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
+  coverImage?: string;
   featured?: boolean;
-}
-
-interface FullDistrict extends MapDistrict {
-  description: string;
-  bestVisitingSeason: string;
-  featured: boolean;
+  bestVisitingSeason?: string;
   weatherInfo?: {
-    avgTemp?: string;
-    rainfall?: string;
-    humidity?: string;
-    climate?: string;
     temperature?: string;
+    humidity?: string;
+    rainfall?: string;
     condition?: string;
+    climate?: string;
   };
 }
 
@@ -53,6 +40,8 @@ const CAT_META: Record<Category, { emoji: string; color: string; label: string }
   WATERFALL: { emoji: '💧', color: '#0ea5e9', label: 'Waterfall' },
   HISTORIC:  { emoji: '🏛️', color: '#8b5cf6', label: 'Historic'  },
   WILDLIFE:  { emoji: '🐘', color: '#10b981', label: 'Wildlife'  },
+  CITY:      { emoji: '🏙️', color: '#1e40af', label: 'City'      },
+  NATURE:    { emoji: '🌿', color: '#34d399', label: 'Nature'    },
 };
 
 // ─── Inline styles ────────────────────────────────────────────────────────────
@@ -271,18 +260,13 @@ export function LeafletMap() {
   const markerLayerRef = useRef<unknown>(null);
 
   const [mapReady, setMapReady]       = useState(false);
-  const [mapData, setMapData]         = useState<{ districts: MapDistrict[]; attractions: MapAttraction[] } | null>(null);
+  const [mapData, setMapData]         = useState<{ destinations: MapDestination[] } | null>(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
-  const [showDistricts, setShowDistricts] = useState(true);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
 
   // Side panel state
-  const [panel, setPanel] = useState<
-    | { type: 'attraction'; data: MapAttraction }
-    | { type: 'district'; id: string; name: string; full: FullDistrict | null }
-    | null
-  >(null);
+  const [panel, setPanel] = useState<{ type: 'destination'; data: MapDestination } | null>(null);
 
   // ── Fetch /map/data ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -293,14 +277,7 @@ export function LeafletMap() {
       .finally(() => setLoading(false));
   }, []);
 
-  // ── Fetch full district ──────────────────────────────────────────────────
-  const fetchDistrict = useCallback((id: string, name: string) => {
-    setPanel({ type: 'district', id, name, full: null });
-    fetch(`${API_URL}/districts/${id}`)
-      .then((r) => r.json())
-      .then((d: FullDistrict) => setPanel({ type: 'district', id, name, full: d }))
-      .catch(() => {});
-  }, []);
+
 
   // ── Init Leaflet ─────────────────────────────────────────────────────────
   const initMap = useCallback((L: LeafletLib) => {
@@ -339,13 +316,12 @@ export function LeafletMap() {
 
     layer.clearLayers();
 
-    // Attraction markers
-    const visibleAttractions = activeCategory
-      ? mapData.attractions.filter((a) => a.category === activeCategory)
-      : mapData.attractions;
+    const visible = activeCategory
+      ? mapData.destinations.filter((d) => d.category === activeCategory)
+      : mapData.destinations;
 
-    visibleAttractions.forEach((a) => {
-      const meta = CAT_META[a.category] ?? CAT_META.TEMPLE;
+    visible.forEach((dest) => {
+      const meta = CAT_META[dest.category] ?? CAT_META.NATURE;
       const icon = L.divIcon({
         html: `<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;background:${meta.color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;transform:rotate(-45deg);font-size:14px"><span style="transform:rotate(45deg)">${meta.emoji}</span></div>`,
         className: '',
@@ -353,45 +329,25 @@ export function LeafletMap() {
         iconAnchor: [17, 34],
         popupAnchor: [0, -34],
       });
-      const marker = L.marker([a.latitude, a.longitude], { icon });
-      marker.on('click', () => setPanel({ type: 'attraction', data: a }));
+      const marker = L.marker([dest.latitude, dest.longitude], { icon });
+      marker.on('click', () => setPanel({ type: 'destination', data: dest }));
       layer.addLayer(marker);
     });
-
-    // District markers
-    if (showDistricts) {
-      mapData.districts.forEach((d) => {
-        const icon = L.divIcon({
-          html: `<div style="background:#1e40af;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.22)">📍 ${d.name}</div>`,
-          className: '',
-          iconAnchor: [0, 12],
-          popupAnchor: [60, -14],
-        });
-        const marker = L.marker([d.latitude, d.longitude], { icon });
-        marker.on('click', () => fetchDistrict(d.id, d.name));
-        layer.addLayer(marker);
-      });
-    }
-  }, [mapData, activeCategory, showDistricts, fetchDistrict, mapReady]);
+  }, [mapData, activeCategory, mapReady]);
 
   // ── Derived counts ───────────────────────────────────────────────────────
-  const featuredCount = mapData?.districts.filter((d) => d.featured).length ?? 0;
-  const visibleAttrCount = activeCategory
-    ? (mapData?.attractions.filter((a) => a.category === activeCategory).length ?? 0)
-    : (mapData?.attractions.length ?? 0);
+  const featuredCount = mapData?.destinations.filter((d) => d.featured).length ?? 0;
+  const visibleCount = activeCategory
+    ? (mapData?.destinations.filter((d) => d.category === activeCategory).length ?? 0)
+    : (mapData?.destinations.length ?? 0);
 
   const categoriesWithData = mapData
     ? (Object.keys(CAT_META) as Category[]).filter((c) =>
-        mapData.attractions.some((a) => a.category === c)
+        mapData.destinations.some((d) => d.category === c)
       )
     : [];
 
-  // ── Legend active categories ─────────────────────────────────────────────
-  const legendCats = mapData
-    ? (Object.keys(CAT_META) as Category[]).filter((c) =>
-        mapData.attractions.some((a) => a.category === c)
-      )
-    : [];
+  const legendCats = categoriesWithData;
 
   return (
     <div style={S.root}>
@@ -401,25 +357,18 @@ export function LeafletMap() {
         <h1 style={S.title}>Sri Lanka Explorer</h1>
         <span style={S.badge('#1e40af', '#bfdbfe')}>Admin · Map View</span>
         <div style={S.countText}>
-          <span>📍 {featuredCount} featured districts</span>
-          <span>🗺️ {visibleAttrCount} attractions{activeCategory ? ` · ${CAT_META[activeCategory].label}` : ''}</span>
+          <span>⭐ {featuredCount} featured</span>
+          <span>🗺️ {visibleCount} destinations{activeCategory ? ` · ${CAT_META[activeCategory].label}` : ''}</span>
         </div>
       </div>
 
       {/* ── Filter Bar ────────────────────────────────────────────────── */}
       <div style={S.filterBar}>
         <button
-          style={S.pill(showDistricts, '#1e40af')}
-          onClick={() => setShowDistricts((v) => !v)}
-        >
-          📍 Districts
-        </button>
-        <div style={S.divider} />
-        <button
           style={S.pill(activeCategory === null, '#475569')}
           onClick={() => setActiveCategory(null)}
         >
-          All attractions
+          All destinations
         </button>
         {categoriesWithData.map((cat) => (
           <button
@@ -476,12 +425,7 @@ export function LeafletMap() {
                   <span style={{ fontSize: 12, color: '#334155' }}>{CAT_META[cat].emoji} {CAT_META[cat].label}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
-                <div style={{ background: '#1e40af', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, border: '1.5px solid #fff', whiteSpace: 'nowrap' }}>
-                  📍 District
-                </div>
-                <span style={{ fontSize: 12, color: '#334155' }}>Featured district</span>
-              </div>
+
             </div>
           )}
         </div>
@@ -492,11 +436,7 @@ export function LeafletMap() {
             <div style={{ ...S.panelInner, position: 'relative' }}>
               <button style={S.panelClose} onClick={() => setPanel(null)}>×</button>
 
-              {panel.type === 'attraction' && <AttractionPanel data={panel.data} />}
-
-              {panel.type === 'district' && (
-                <DistrictPanel id={panel.id} name={panel.name} full={panel.full} />
-              )}
+              {panel.type === 'destination' && <DestinationPanel data={panel.data} />}
             </div>
           )}
         </div>
@@ -506,10 +446,10 @@ export function LeafletMap() {
   );
 }
 
-// ─── Attraction Panel ─────────────────────────────────────────────────────────
+// ─── Destination Panel ────────────────────────────────────────────────────────
 
-function AttractionPanel({ data }: { data: MapAttraction }) {
-  const meta = CAT_META[data.category] ?? CAT_META.TEMPLE;
+function DestinationPanel({ data }: { data: MapDestination }) {
+  const meta = CAT_META[data.category] ?? CAT_META.NATURE;
   return (
     <>
       <span style={{ ...S.badge(meta.color + '22', meta.color), fontSize: 11, fontWeight: 700 }}>
@@ -534,14 +474,33 @@ function AttractionPanel({ data }: { data: MapAttraction }) {
           <div style={S.infoValue}>{data.openingHours || '—'}</div>
         </div>
         <div style={S.infoCard()}>
-          <div style={S.infoLabel}>📍 District</div>
-          <div style={S.infoValue}>{data.district?.name || '—'}</div>
+          <div style={S.infoLabel}>🌤 Best season</div>
+          <div style={S.infoValue}>{data.bestVisitingSeason || '—'}</div>
         </div>
       </div>
+
+      {data.weatherInfo && (
+        <div style={S.infoGrid}>
+          <div style={S.infoCard()}>
+            <div style={S.infoLabel}>🌡 Temp</div>
+            <div style={S.infoValue}>{data.weatherInfo.temperature ?? '—'}</div>
+          </div>
+          <div style={S.infoCard()}>
+            <div style={S.infoLabel}>🌿 Climate</div>
+            <div style={S.infoValue}>{data.weatherInfo.climate ?? data.weatherInfo.condition ?? '—'}</div>
+          </div>
+        </div>
+      )}
 
       {data.travelTips && (
         <div style={S.tipBox}>
           <strong>💡 Travel tip:</strong> {data.travelTips}
+        </div>
+      )}
+
+      {data.featured && (
+        <div style={{ ...S.badge('#fefce8', '#854d0e'), display: 'inline-block', marginTop: 14, fontSize: 12 }}>
+          ⭐ Featured destination
         </div>
       )}
 
@@ -554,65 +513,13 @@ function AttractionPanel({ data }: { data: MapAttraction }) {
         </div>
       )}
 
+      <a href={`/destinations/${data.id}`} style={S.viewBtn}>
+        View Full Details →
+      </a>
+
       <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>
         {data.latitude.toFixed(4)}, {data.longitude.toFixed(4)}
       </p>
-    </>
-  );
-}
-
-// ─── District Panel ───────────────────────────────────────────────────────────
-
-function DistrictPanel({ id, name, full }: { id: string; name: string; full: FullDistrict | null }) {
-  return (
-    <>
-      <span style={S.badge('#dbeafe', '#1e40af')}>📍 District</span>
-      <h2 style={{ fontSize: 17, fontWeight: 700, margin: '10px 0 6px', color: '#0f172a', paddingRight: 24 }}>
-        {full?.name ?? name}
-      </h2>
-
-      {!full ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>Loading details…</p>
-      ) : (
-        <>
-          <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.55, margin: 0 }}>{full.description}</p>
-
-          <div style={S.seasonBox}>
-            <strong>🌤 Best time to visit:</strong> {full.bestVisitingSeason}
-          </div>
-
-          {full.weatherInfo && (
-            <div style={S.infoGrid}>
-              <div style={S.infoCard()}>
-                <div style={S.infoLabel}>🌡 Avg Temp</div>
-                <div style={S.infoValue}>{full.weatherInfo.avgTemp ?? full.weatherInfo.temperature ?? '—'}</div>
-              </div>
-              <div style={S.infoCard()}>
-                <div style={S.infoLabel}>🌧 Rainfall</div>
-                <div style={S.infoValue}>{full.weatherInfo.rainfall ?? '—'}</div>
-              </div>
-              <div style={S.infoCard()}>
-                <div style={S.infoLabel}>💧 Humidity</div>
-                <div style={S.infoValue}>{full.weatherInfo.humidity ?? '—'}</div>
-              </div>
-              <div style={S.infoCard()}>
-                <div style={S.infoLabel}>🌿 Climate</div>
-                <div style={S.infoValue}>{full.weatherInfo.climate ?? full.weatherInfo.condition ?? '—'}</div>
-              </div>
-            </div>
-          )}
-
-          {full.featured && (
-            <div style={{ ...S.badge('#fefce8', '#854d0e'), display: 'inline-block', marginTop: 14, fontSize: 12 }}>
-              ⭐ Featured destination
-            </div>
-          )}
-
-          <a href={`/destinations/${id}`} style={S.viewBtn}>
-            View Full Details →
-          </a>
-        </>
-      )}
     </>
   );
 }

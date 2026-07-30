@@ -10,24 +10,35 @@ export { WeatherInfo } from './components/WeatherInfo';
 export { SriLankaMap } from './components/SriLankaMap';
 
 export {
+  useDestinations,
+  useDestinationById,
+  useFeaturedDestinations,
+  useCreateDestination,
+  useUpdateDestination,
+  useDeleteDestination,
+  useMapData,
+  useCategories,
+  // Legacy aliases
   useDistricts,
   useDistrictById,
   useFeaturedDistricts,
   useAttractions,
   useAttractionsByCategory,
   useAttractionsByDistrict,
-  useMapData,
-  useCategories,
 } from './hooks/useDestination';
 
 export { DestinationAPI } from './api/destination.api';
 
 export type {
-  District,
-  Attraction,
+  Destination,
+  DestinationCategory,
+  DestinationFilters,
   TourCategory,
   TourCategoryName,
+  MapData,
+  // Legacy aliases
+  District,
+  Attraction,
   AttractionCategory,
-  WeatherInfo as WeatherInfoType,
   AttractionFilters,
 } from './types/destination.types';

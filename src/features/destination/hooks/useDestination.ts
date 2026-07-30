@@ -1,59 +1,68 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { DestinationAPI } from '../api/destination.api';
-import type { AttractionFilters, AttractionCategory } from '../types/destination.types';
+import type { DestinationFilters } from '../types/destination.types';
 
-export function useDistricts(search?: string) {
+export function useDestinations(filters?: DestinationFilters) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['districts', 'list', search],
-    queryFn: () => DestinationAPI.getDistricts(search),
+    queryKey: ['destinations', 'list', filters],
+    queryFn: () => DestinationAPI.getAll(filters),
   });
   return { data: data ?? [], isLoading, isError };
 }
 
-export function useDistrictById(id: string | null) {
+export function useDestinationById(id: string | null) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['districts', 'detail', id],
-    queryFn: () => DestinationAPI.getDistrictById(id!),
+    queryKey: ['destinations', 'detail', id],
+    queryFn: () => DestinationAPI.getById(id!),
     enabled: !!id,
   });
   return { data: data ?? null, isLoading, isError };
 }
 
-export function useFeaturedDistricts() {
+export function useFeaturedDestinations() {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['districts', 'featured'],
-    queryFn: () => DestinationAPI.getFeaturedDistricts(),
+    queryKey: ['destinations', 'featured'],
+    queryFn: () => DestinationAPI.getFeatured(),
     staleTime: 5 * 60 * 1000,
   });
   return { data: data ?? [], isLoading, isError };
 }
 
-export function useAttractions(filters?: AttractionFilters) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['attractions', 'list', filters],
-    queryFn: () => DestinationAPI.getAttractions(filters),
+export function useCreateDestination() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: DestinationAPI.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['destinations'] });
+      toast.success('Destination created');
+    },
   });
-  return { data: data ?? [], isLoading, isError };
 }
 
-export function useAttractionsByCategory(category: AttractionCategory | null) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['attractions', 'category', category],
-    queryFn: () => DestinationAPI.getAttractionsByCategory(category!),
-    enabled: !!category,
+export function useUpdateDestination() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof DestinationAPI.update>[1] }) =>
+      DestinationAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['destinations'] });
+      toast.success('Destination updated');
+    },
   });
-  return { data: data ?? [], isLoading, isError };
 }
 
-export function useAttractionsByDistrict(districtId: string | null) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['attractions', 'district', districtId],
-    queryFn: () => DestinationAPI.getAttractionsByDistrict(districtId!),
-    enabled: !!districtId,
+export function useDeleteDestination() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: DestinationAPI.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['destinations'] });
+      toast.success('Destination deleted');
+    },
   });
-  return { data: data ?? [], isLoading, isError };
 }
 
 export function useMapData() {
@@ -62,7 +71,7 @@ export function useMapData() {
     queryFn: () => DestinationAPI.getMapData(),
     staleTime: 10 * 60 * 1000,
   });
-  return { data: data ?? { districts: [], attractions: [] }, isLoading, isError };
+  return { data: data ?? { destinations: [] }, isLoading, isError };
 }
 
 export function useCategories() {
@@ -73,3 +82,12 @@ export function useCategories() {
   });
   return { data: data ?? [], isLoading, isError };
 }
+
+// Legacy aliases
+export const useDistricts = (search?: string) => useDestinations(search ? { search } : undefined);
+export const useDistrictById = useDestinationById;
+export const useFeaturedDistricts = useFeaturedDestinations;
+export const useAttractions = (filters?: DestinationFilters) => useDestinations(filters);
+export const useAttractionsByCategory = (category: string | null) =>
+  useDestinations(category ? { category: category as Parameters<typeof useDestinations>[0] extends { category?: infer C } ? C : never } : undefined);
+export const useAttractionsByDistrict = (_districtId: string | null) => ({ data: [], isLoading: false, isError: false });

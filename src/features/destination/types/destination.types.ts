@@ -1,54 +1,45 @@
-export type AttractionCategory = 'TEMPLE' | 'BEACH' | 'MOUNTAIN' | 'WATERFALL' | 'HISTORIC' | 'WILDLIFE';
+export type DestinationCategory =
+  | 'TEMPLE'
+  | 'BEACH'
+  | 'MOUNTAIN'
+  | 'WATERFALL'
+  | 'HISTORIC'
+  | 'WILDLIFE'
+  | 'CITY'
+  | 'NATURE';
+
 export type TourCategoryName = 'ADVENTURE' | 'NATURE' | 'ROMANTIC' | 'WILDLIFE' | 'FAMILY' | 'CULTURAL' | 'BEACH' | 'LUXURY';
 
-export interface WeatherInfo {
-  temperature?: string;
-  humidity?: string;
-  rainfall?: string;
-  condition?: string;
-  bestMonths?: string[];
-}
-
-export interface Attraction {
+export interface Destination {
   id: string;
-  districtId: string;
   name: string;
   description: string;
-  category: AttractionCategory;
+  category: DestinationCategory;
   images: string[];
-  travelTips: string;
-  estimatedVisitingTime: string;
+  coverImage?: string;
   latitude: number;
   longitude: number;
+  weatherInfo?: {
+    temperature?: string;
+    humidity?: string;
+    rainfall?: string;
+    condition?: string;
+    climate?: string;
+    bestMonths?: string[];
+  };
+  bestVisitingSeason?: string;
+  travelTips?: string;
+  estimatedVisitingTime?: string;
   openingHours?: string;
-  entryFee: number;
-  district?: { name: string };
-}
-
-export interface MapDistrict {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  featured?: boolean;
+  entryFee?: number;
+  featured: boolean;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MapData {
-  districts: MapDistrict[];
-  attractions: Attraction[];
-}
-
-export interface District {
-  id: string;
-  name: string;
-  description: string;
-  weatherInfo: WeatherInfo;
-  bestVisitingSeason: string;
-  latitude: number;
-  longitude: number;
-  coverImage: string;
-  featured: boolean;
-  attractions?: Attraction[];
+  destinations: Destination[];
 }
 
 export interface TourCategory {
@@ -60,9 +51,16 @@ export interface TourCategory {
   featured: boolean;
 }
 
-export interface AttractionFilters {
-  districtId?: string;
-  category?: AttractionCategory;
+export interface DestinationFilters {
+  category?: DestinationCategory;
   search?: string;
+  featured?: boolean;
   page?: number;
+  limit?: number;
 }
+
+// Legacy aliases kept for any remaining internal references
+export type District = Destination;
+export type Attraction = Destination;
+export type AttractionCategory = DestinationCategory;
+export type AttractionFilters = DestinationFilters;

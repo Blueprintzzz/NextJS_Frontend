@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { DistrictCard as DestinationCardFeature } from '@/features/destination';
-import type { District } from '@/features/destination';
+import type { Destination } from '@/features/destination';
 
 interface FeaturedDestinationsProps {
-  destinations: District[];
+  destinations: Destination[];
   title?: string;
   showCta?: boolean;
 }

@@ -5,15 +5,15 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { Search, Grid3X3, List, MapPin } from 'lucide-react';
 import { DestinationCard } from '@/components/public/cards/DestinationCard';
-import { AttractionCard, CategoryFilter, useDistricts, useAttractions } from '@/features/destination';
-import type { AttractionCategory } from '@/features/destination';
+import { AttractionCard, CategoryFilter, useDestinations } from '@/features/destination';
+import type { DestinationCategory } from '@/features/destination';
 
 const LeafletMap = dynamic(
   () => import('@/features/destination/components/LeafletMap').then((m) => ({ default: m.LeafletMap })),
   { ssr: false, loading: () => <div className="h-[1000px] bg-gray-100 animate-pulse rounded-xl" /> }
 );
 
-const ATTRACTION_CATEGORIES: { value: AttractionCategory | 'ALL'; label: string }[] = [
+const ATTRACTION_CATEGORIES: { value: DestinationCategory | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'All' },
   { value: 'TEMPLE', label: 'Temples' },
   { value: 'BEACH', label: 'Beaches' },
@@ -26,10 +26,10 @@ const ATTRACTION_CATEGORIES: { value: AttractionCategory | 'ALL'; label: string 
 export default function DestinationsPage() {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [attractionCategory, setAttractionCategory] = useState<AttractionCategory | 'ALL'>('ALL');
+  const [attractionCategory, setAttractionCategory] = useState<DestinationCategory | 'ALL'>('ALL');
 
-  const { data: districts, isLoading: loadingDistricts } = useDistricts(search || undefined);
-  const { data: attractions, isLoading: loadingAttractions } = useAttractions(
+  const { data: districts, isLoading: loadingDistricts } = useDestinations(search ? { search } : undefined);
+  const { data: attractions, isLoading: loadingAttractions } = useDestinations(
     attractionCategory !== 'ALL' ? { category: attractionCategory } : undefined
   );
 

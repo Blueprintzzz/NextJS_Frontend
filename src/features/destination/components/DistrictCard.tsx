@@ -2,11 +2,11 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, CalendarDays } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import type { District } from '../types/destination.types';
+import type { Destination } from '../types/destination.types';
 
-interface Props { district: District; }
+interface Props { district: Destination; }
 
 export function DistrictCard({ district }: Props) {
   return (
@@ -25,13 +25,8 @@ export function DistrictCard({ district }: Props) {
         <h3 className="font-semibold text-gray-900">{district.name}</h3>
         <p className="text-sm text-gray-500 line-clamp-2">{district.description}</p>
         <div className="flex items-center gap-3 text-xs text-gray-400 pt-1">
-          {district.attractions && (
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {district.attractions.length} attractions
-            </span>
-          )}
           <span className="flex items-center gap-1">
-            <CalendarDays className="w-3 h-3" /> {district.bestVisitingSeason}
+            <CalendarDays className="w-3 h-3" /> {district.bestVisitingSeason ?? '—'}
           </span>
         </div>
         <Link href={`/destinations/${district.id}`} className="text-sm text-teal-600 hover:underline block pt-1">

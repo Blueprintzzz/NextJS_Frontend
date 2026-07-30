@@ -1,10 +1,5 @@
 import { apiRequest } from '@/lib/api';
-import type {
-  District,
-  Attraction,
-  TourCategory,
-  AttractionFilters,
-} from '../types/destination.types';
+import type { Destination, DestinationFilters, TourCategory } from '../types/destination.types';
 
 interface Paginated<T> { data: T[]; total: number; page: number; limit: number; pages: number; }
 function extractList<T>(raw: unknown): T[] {
@@ -22,86 +17,45 @@ function buildQuery(params?: Record<string, unknown>): string {
 }
 
 export const DestinationAPI = {
-  // Districts
-  async getDistricts(search?: string): Promise<District[]> {
+  async getAll(filters?: DestinationFilters): Promise<Destination[]> {
     try {
-      const raw = await apiRequest(`/districts${buildQuery({ ...(search ? { search } : {}), limit: 100 })}`);
-      return extractList<District>(raw);
+      const raw = await apiRequest(`/destinations${buildQuery({ ...(filters as Record<string, unknown>), limit: filters?.limit ?? 100 })}`);
+      return extractList<Destination>(raw);
     } catch { return []; }
   },
 
-  async getDistrictById(id: string): Promise<District | null> {
-    try { return (await apiRequest(`/districts/${id}`)) as District; }
+  async getById(id: string): Promise<Destination | null> {
+    try { return (await apiRequest(`/destinations/${id}`)) as Destination; }
     catch { return null; }
   },
 
-  async getFeaturedDistricts(): Promise<District[]> {
+  async getFeatured(): Promise<Destination[]> {
     try {
-      const raw = await apiRequest('/districts/featured');
-      return extractList<District>(raw);
+      const raw = await apiRequest('/destinations/featured');
+      return extractList<Destination>(raw);
     } catch { return []; }
   },
 
-  async createDistrict(data: Partial<District>): Promise<District> {
-    return apiRequest('/districts', { method: 'POST', body: JSON.stringify(data) }) as Promise<District>;
+  async create(data: Partial<Destination>): Promise<Destination> {
+    return apiRequest('/destinations', { method: 'POST', body: JSON.stringify(data) }) as Promise<Destination>;
   },
 
-  async updateDistrict(id: string, data: Partial<District>): Promise<District> {
-    return apiRequest(`/districts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<District>;
+  async update(id: string, data: Partial<Destination>): Promise<Destination> {
+    return apiRequest(`/destinations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<Destination>;
   },
 
-  async deleteDistrict(id: string): Promise<void> {
-    await apiRequest(`/districts/${id}`, { method: 'DELETE' });
+  async delete(id: string): Promise<void> {
+    await apiRequest(`/destinations/${id}`, { method: 'DELETE' });
   },
 
-  async setDistrictFeatured(id: string): Promise<District> {
-    return apiRequest(`/districts/${id}/featured`, { method: 'POST' }) as Promise<District>;
+  async setFeatured(id: string): Promise<Destination> {
+    return apiRequest(`/destinations/${id}/featured`, { method: 'POST' }) as Promise<Destination>;
   },
 
-  // Attractions
-  async getAttractions(filters?: AttractionFilters): Promise<Attraction[]> {
+  async getMapData(): Promise<{ destinations: Destination[] }> {
     try {
-      const raw = await apiRequest(`/attractions${buildQuery(filters as Record<string, unknown>)}`);
-      return extractList<Attraction>(raw);
-    } catch { return []; }
-  },
-
-  async getAttractionById(id: string): Promise<Attraction | null> {
-    try { return (await apiRequest(`/attractions/${id}`)) as Attraction; }
-    catch { return null; }
-  },
-
-  async getAttractionsByCategory(category: string): Promise<Attraction[]> {
-    try {
-      const raw = await apiRequest(`/attractions/category/${category}`);
-      return extractList<Attraction>(raw);
-    } catch { return []; }
-  },
-
-  async getAttractionsByDistrict(districtId: string): Promise<Attraction[]> {
-    try {
-      const raw = await apiRequest(`/attractions/district/${districtId}`);
-      return extractList<Attraction>(raw);
-    } catch { return []; }
-  },
-
-  async createAttraction(data: Partial<Attraction>): Promise<Attraction> {
-    return apiRequest('/attractions', { method: 'POST', body: JSON.stringify(data) }) as Promise<Attraction>;
-  },
-
-  async updateAttraction(id: string, data: Partial<Attraction>): Promise<Attraction> {
-    return apiRequest(`/attractions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<Attraction>;
-  },
-
-  async deleteAttraction(id: string): Promise<void> {
-    await apiRequest(`/attractions/${id}`, { method: 'DELETE' });
-  },
-
-  // Map & Categories
-  async getMapData(): Promise<{ districts: District[]; attractions: Attraction[] }> {
-    try {
-      return (await apiRequest('/map/data')) as { districts: District[]; attractions: Attraction[] };
-    } catch { return { districts: [], attractions: [] }; }
+      return (await apiRequest('/map/data')) as { destinations: Destination[] };
+    } catch { return { destinations: [] }; }
   },
 
   async getCategories(): Promise<TourCategory[]> {
@@ -118,4 +72,20 @@ export const DestinationAPI = {
   async createCategory(data: Partial<TourCategory>): Promise<TourCategory> {
     return apiRequest('/categories', { method: 'POST', body: JSON.stringify(data) }) as Promise<TourCategory>;
   },
+
+  // Legacy aliases
+  getDistricts: (search?: string) => DestinationAPI.getAll(search ? { search } : undefined),
+  getDistrictById: (id: string) => DestinationAPI.getById(id),
+  getFeaturedDistricts: () => DestinationAPI.getFeatured(),
+  createDistrict: (data: Partial<Destination>) => DestinationAPI.create(data),
+  updateDistrict: (id: string, data: Partial<Destination>) => DestinationAPI.update(id, data),
+  deleteDistrict: (id: string) => DestinationAPI.delete(id),
+  setDistrictFeatured: (id: string) => DestinationAPI.setFeatured(id),
+  getAttractions: (filters?: DestinationFilters) => DestinationAPI.getAll(filters),
+  getAttractionById: (id: string) => DestinationAPI.getById(id),
+  getAttractionsByCategory: (category: string) => DestinationAPI.getAll({ category: category as Destination['category'] }),
+  getAttractionsByDistrict: (_districtId: string) => Promise.resolve([] as Destination[]),
+  createAttraction: (data: Partial<Destination>) => DestinationAPI.create(data),
+  updateAttraction: (id: string, data: Partial<Destination>) => DestinationAPI.update(id, data),
+  deleteAttraction: (id: string) => DestinationAPI.delete(id),
 };

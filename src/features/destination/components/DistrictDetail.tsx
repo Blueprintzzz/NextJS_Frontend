@@ -4,10 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { WeatherInfo } from './WeatherInfo';
-import { AttractionList } from './AttractionList';
-import type { District } from '../types/destination.types';
+import type { Destination } from '../types/destination.types';
 
-interface Props { district: District; }
+interface Props { district: Destination; }
 
 export function DistrictDetail({ district }: Props) {
   return (
@@ -35,17 +34,9 @@ export function DistrictDetail({ district }: Props) {
       </div>
 
       <div className="flex gap-3">
-        <Link href={`/packages?district=${district.id}`}>
+        <Link href={`/packages?destination=${district.id}`}>
           <Button variant="outline">View Packages</Button>
         </Link>
-        <Link href={`/destinations/${district.id}/attractions`}>
-          <Button>All Attractions</Button>
-        </Link>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Attractions</h2>
-        <AttractionList districtId={district.id} />
       </div>
     </div>
   );

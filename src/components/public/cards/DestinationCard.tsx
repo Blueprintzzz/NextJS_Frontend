@@ -3,10 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, CalendarDays, Sun } from 'lucide-react';
-import type { District } from '@/features/destination';
+import type { Destination } from '@/features/destination';
 
 interface DestinationCardProps {
-  district: District;
+  district: Destination;
 }
 
 export function DestinationCard({ district }: DestinationCardProps) {
@@ -35,15 +35,15 @@ export function DestinationCard({ district }: DestinationCardProps) {
         <p className="text-gray-600 text-sm line-clamp-2">{district.description}</p>
 
         <div className="flex items-center gap-4 text-xs text-gray-500">
-          {district.attractions && (
+          {district.images?.length > 0 && (
             <span className="flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-teal-500" />
-              {district.attractions.length} Attractions
+              {district.category}
             </span>
           )}
           <span className="flex items-center gap-1">
             <CalendarDays className="w-3.5 h-3.5 text-teal-500" />
-            {district.bestVisitingSeason}
+            {district.bestVisitingSeason ?? '—'}
           </span>
         </div>
 

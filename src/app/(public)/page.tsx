@@ -9,7 +9,7 @@ import { CTASection } from '@/components/public/sections/CTASection';
 import { NewsletterSection } from '@/components/public/sections/NewsletterSection';
 import { TrustIndicators } from '@/components/public/sections/TrustIndicators';
 import { TourCard } from '@/components/public/cards/TourCard';
-import { useFeaturedDistricts } from '@/features/destination';
+import { useFeaturedDestinations } from '@/features/destination';
 import { useFeaturedPackages } from '@/features/package';
 
 const heroSlides = [
@@ -102,7 +102,7 @@ function FeaturedToursSection() {
 }
 
 function FeaturedDestinationsSection() {
-  const { data: districts, isLoading } = useFeaturedDistricts();
+  const { data: districts, isLoading } = useFeaturedDestinations();
 
   if (isLoading) {
     return (
