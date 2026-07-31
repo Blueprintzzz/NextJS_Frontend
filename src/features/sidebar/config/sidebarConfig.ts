@@ -65,7 +65,6 @@ export const destinationsGroup: NavGroup = {
   items: [
     { label: 'Explore Map', href: '/map', icon: Map },
     { label: 'All Districts', href: '/destinations', icon: MapPin },
-    { label: 'Categories', href: '/categories', icon: LayoutGrid },
   ],
 };
 
@@ -91,6 +90,7 @@ export const adminGroup: NavGroup = {
     { label: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
     { label: 'Reviews', href: '/admin/reviews', icon: ShieldCheck },
     { label: 'Analytics', href: '/admin/analytics', icon: TrendingUp },
+    { label: 'Categories', href: '/admin/categories', icon: LayoutGrid },
   ],
 };
 

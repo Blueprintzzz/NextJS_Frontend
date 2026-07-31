@@ -63,6 +63,8 @@ export function CreatePackageForm() {
   const [step, setStep]                   = useState(0);
   const [form, setForm]                   = useState<CreatePackageInput>(EMPTY);
   const [highlightInput, setHighlightInput] = useState('');
+  const [airportPickup,  setAirportPickup]  = useState(false);
+  const [airportDropoff, setAirportDropoff] = useState(false);
 
   // ── Best Season month picker state ───────────────────────────────────────
   const MONTHS = [
@@ -168,7 +170,12 @@ export function CreatePackageForm() {
     set('inclusions', form.inclusions.map((inc, idx) => idx === i ? { ...inc, ...patch } : inc));
 
   const handleSubmit = () => {
-    mutation.mutate(form, { onSuccess: () => router.push('/packages') });
+    const itinerary = form.itinerary.map((d, i) => ({
+      ...d,
+      ...(i === 0 ? { airportPickup } : {}),
+      ...(i === form.itinerary.length - 1 ? { airportDropoff } : {}),
+    }));
+    mutation.mutate({ ...form, itinerary }, { onSuccess: () => router.push('/packages') });
   };
 
   const isLast = step === STEPS.length - 1;
@@ -506,6 +513,50 @@ export function CreatePackageForm() {
                       value={day.description}
                       onChange={(e) => updateDay(i, { description: e.target.value })}
                     />
+
+                    {/* ── Airport toggles ── */}
+                    {i === 0 && (
+                      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-blue-100 bg-blue-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">✈️</span>
+                          <div>
+                            <p className="text-xs font-semibold text-blue-800">Airport Pickup</p>
+                            <p className="text-[11px] text-blue-500">Pick up guests from the airport on Day 1</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAirportPickup((v) => !v)}
+                          className={[
+                            'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer',
+                            airportPickup ? 'bg-blue-500' : 'bg-gray-200',
+                          ].join(' ')}
+                        >
+                          <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform', airportPickup ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+                        </button>
+                      </div>
+                    )}
+                    {i === form.itinerary.length - 1 && (
+                      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-purple-100 bg-purple-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🛫</span>
+                          <div>
+                            <p className="text-xs font-semibold text-purple-800">Airport Drop-off</p>
+                            <p className="text-[11px] text-purple-500">Drop off guests at the airport on the last day</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAirportDropoff((v) => !v)}
+                          className={[
+                            'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer',
+                            airportDropoff ? 'bg-purple-500' : 'bg-gray-200',
+                          ].join(' ')}
+                        >
+                          <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform', airportDropoff ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+                        </button>
+                      </div>
+                    )}
 
                     {/* ── Picker buttons ── */}
                     <div className="flex gap-2 mt-1">
