@@ -38,7 +38,7 @@ export interface AvailabilityResult {
 }
 
 export interface CreateVehicleInput {
-  name: string;
+  vehicleModelId: string;
   registrationNumber: string;
   type: VehicleType;
   capacity: number;
