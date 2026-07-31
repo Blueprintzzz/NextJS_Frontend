@@ -29,7 +29,7 @@ const ROLE_BADGE: Record<string, string> = {
 function getGroupsForRole(role: string | undefined): NavGroup[] {
   switch (role) {
     case 'TOURIST':
-      return [touristGroup, bookingsGroup, destinationsGroup, reviewsGroup];
+      return [touristGroup, bookingsGroup, reviewsGroup];
     case 'DRIVER':
       return [driverGroup, driverVehiclesGroup, destinationsGroup];
     case 'ADMIN':

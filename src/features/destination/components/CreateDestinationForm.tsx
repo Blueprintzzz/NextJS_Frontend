@@ -88,10 +88,8 @@ export function CreateDestinationForm() {
 
   const fetchSuggestions = async (value: string) => {
     const results = await searchPlaces(value);
-    if (results.length > 0) {
-      setSuggestions(results);
-      setShowSuggestions(true);
-    }
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0);
   };
 
   const handleNameChange = (value: string) => {

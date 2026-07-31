@@ -15,6 +15,8 @@ export interface PackageItinerary {
   title: string;
   description: string;
   attractions: { id: string; label: string; tag: 'destination' }[];
+  airportPickup?: boolean;
+  airportDropoff?: boolean;
 }
 
 export interface PackageInclusion {

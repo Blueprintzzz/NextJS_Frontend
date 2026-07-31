@@ -36,7 +36,7 @@ export default function CategoriesPage() {
           {categories.map((cat) => (
             <Link
               key={cat.id}
-              href={`/categories/${cat.name.toLowerCase()}`}
+              href={`/admin/categories/${cat.name.toLowerCase()}`}
               className="block rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md hover:border-green-300 transition-all group"
             >
               <div className="text-4xl mb-3">{CATEGORY_ICONS[cat.name] ?? '🗺️'}</div>
