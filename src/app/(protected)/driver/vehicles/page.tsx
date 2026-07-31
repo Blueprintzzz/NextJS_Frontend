@@ -39,7 +39,7 @@ export default function DriverVehiclesPage() {
             <div key={v.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative h-40 bg-gray-100">
                 {v.images[0] ? (
-                  <Image src={v.images[0]} alt={v.name} fill className="object-cover" />
+                  <Image src={v.images[0]} alt={v.name ?? 'Vehicle image'} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">🚗</div>
                 )}
