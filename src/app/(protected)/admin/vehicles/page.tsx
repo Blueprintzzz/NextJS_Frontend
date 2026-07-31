@@ -78,7 +78,7 @@ export default function AdminVehiclesPage() {
                     <td className="px-4 py-3">
                       <div className="relative w-14 h-10 rounded overflow-hidden bg-gray-100">
                         {v.images[0] && (
-                          <Image src={v.images[0]} alt={v.name} fill className="object-cover" sizes="56px" />
+                          <Image src={v.images[0]} alt={v.name ?? 'Vehicle image'} fill className="object-cover" sizes="56px" />
                         )}
                       </div>
                     </td>
