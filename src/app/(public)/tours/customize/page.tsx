@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
 import type { MapboxMarker } from '@/components/shared/MapboxMapDynamic';
+import { searchPlaces } from '@/lib/geocoding';
+import type { GeoSuggestion } from '@/lib/geocoding';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -37,43 +39,20 @@ const BUDGET_RANGES = [
 const TOTAL_STEPS = 6;
 const STEP_LABELS = ['Contact', 'Tour Type', 'Duration & Group', 'Budget & Date', 'Destinations', 'Vehicle'];
 
-const SRI_LANKA_DESTINATIONS = [
-  { name: 'Colombo',      lat: 6.9271, lng: 79.8612 },
-  { name: 'Kandy',        lat: 7.2906, lng: 80.6337 },
-  { name: 'Galle',        lat: 6.0535, lng: 80.2210 },
-  { name: 'Ella',         lat: 6.8667, lng: 81.0466 },
-  { name: 'Sigiriya',     lat: 7.9570, lng: 80.7603 },
-  { name: 'Nuwara Eliya', lat: 6.9497, lng: 80.7891 },
-  { name: 'Yala',         lat: 6.3728, lng: 81.5165 },
-  { name: 'Mirissa',      lat: 5.9483, lng: 80.4589 },
-  { name: 'Bentota',      lat: 6.4260, lng: 79.9955 },
-  { name: 'Trincomalee',  lat: 8.5874, lng: 81.2152 },
-  { name: 'Jaffna',       lat: 9.6615, lng: 80.0255 },
-  { name: 'Anuradhapura', lat: 8.3114, lng: 80.4037 },
-  { name: 'Polonnaruwa',  lat: 7.9403, lng: 81.0188 },
-  { name: 'Dambulla',     lat: 7.8675, lng: 80.6517 },
-  { name: 'Arugam Bay',   lat: 6.8400, lng: 81.8360 },
-] as const;
-
-const SRI_LANKA_DESTINATION_COORDS: Record<string, [number, number]> = {
-  'Colombo':      [79.8612, 6.9271],
-  'Kandy':        [80.6337, 7.2906],
-  'Galle':        [80.2210, 6.0535],
-  'Ella':         [81.0466, 6.8667],
-  'Sigiriya':     [80.7603, 7.9570],
-  'Nuwara Eliya': [80.7891, 6.9497],
-  'Yala':         [81.5165, 6.3728],
-  'Mirissa':      [80.4589, 5.9483],
-  'Bentota':      [79.9955, 6.4260],
-  'Trincomalee':  [81.2152, 8.5874],
-  'Jaffna':       [80.0255, 9.6615],
-  'Anuradhapura': [80.4037, 8.3114],
-  'Polonnaruwa':  [81.0188, 7.9403],
-  'Dambulla':     [80.6517, 7.8675],
-  'Arugam Bay':   [81.8360, 6.8400],
+type AttractionItem = {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  district?: string;
+  images?: string[];
+  latitude: number;
+  longitude: number;
+  featured?: boolean;
+  status?: string;
 };
 
-type DistrictItem = {
+type ExtraDestination = {
   id: string;
   name: string;
   latitude: number;
@@ -218,14 +197,18 @@ export default function CustomizeTourPage() {
   const [destinations,     setDestinations]      = useState<string[]>([]);
   const [specialRequests,  setSpecialRequests]   = useState('');
 
-  // Extra destinations picked from API districts (have lat/lng)
-  const [extraDestinations, setExtraDestinations] = useState<DistrictItem[]>([]);
+  // Attractions fetched from API (chip grid)
+  const [attractions,      setAttractions]      = useState<AttractionItem[]>([]);
+  const [attractionsFetched, setAttractionsFetched] = useState(false);
 
-  // District search UI state
-  const [allDistricts,     setAllDistricts]     = useState<DistrictItem[]>([]);
-  const [districtsLoading, setDistrictsLoading] = useState(false);
+  // Extra destinations from geocoding search
+  const [extraDestinations, setExtraDestinations] = useState<ExtraDestination[]>([]);
+
+  // Geocoding search UI state
   const [districtSearch,   setDistrictSearch]   = useState('');
-  const [districtsFetched, setDistrictsFetched] = useState(false);
+  const [geoResults,       setGeoResults]       = useState<GeoSuggestion[]>([]);
+  const [geoSearching,     setGeoSearching]     = useState(false);
+  const geoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted,  setSubmitted]  = useState(false);
@@ -240,32 +223,25 @@ export default function CustomizeTourPage() {
   const toggleTourType = (value: string) =>
     setTourTypes((prev) => prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]);
 
-  const toggleDestination = (name: string) =>
-    setDestinations((prev) => prev.includes(name) ? prev.filter((d) => d !== name) : [...prev, name]);
+  const toggleDestination = (id: string) =>
+    setDestinations((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]);
 
-  const addExtraDestination = (district: DistrictItem) => {
-    const alreadyPreset = SRI_LANKA_DESTINATIONS.some(
-      d => d.name.toLowerCase() === district.name.toLowerCase()
-    );
-    const alreadyExtra = extraDestinations.some(d => d.id === district.id);
-    if (alreadyPreset || alreadyExtra) return;
-    setExtraDestinations(prev => [...prev, district]);
+  const addExtraDestination = (suggestion: GeoSuggestion) => {
+    const [lng, lat] = suggestion.center;
+    const id = `${suggestion.place_name}-${suggestion.center.join(',')}`;
+    const nameLower = suggestion.place_name.toLowerCase();
+    if (
+      extraDestinations.some(d => d.id === id) ||
+      attractions.some(a => a.name.toLowerCase() === nameLower)
+    ) return;
+    setExtraDestinations(prev => [...prev, { id, name: suggestion.place_name, latitude: lat, longitude: lng }]);
     setDistrictSearch('');
+    setGeoResults([]);
   };
 
   const removeExtraDestination = (id: string) => {
     setExtraDestinations(prev => prev.filter(d => d.id !== id));
   };
-
-  const filteredDistricts = districtSearch.trim().length > 0
-    ? allDistricts.filter(d =>
-        d.name.toLowerCase().includes(districtSearch.toLowerCase()) &&
-        !extraDestinations.some(e => e.id === d.id) &&
-        !SRI_LANKA_DESTINATIONS.some(
-          p => p.name.toLowerCase() === d.name.toLowerCase()
-        )
-      )
-    : [];
 
   const goNext = () => {
     if (step === 1) {
@@ -279,49 +255,52 @@ export default function CustomizeTourPage() {
   const goBack = () => { setError(null); setStep((s) => Math.max(s - 1, 1)); };
   const goToStep = (target: number) => { if (target < step) setStep(target); };
 
-  // ── Fetch districts when step 5 is first reached ────────────────────────────
+  // ── Fetch attractions when step 5 is first reached ──────────────────────────
   useEffect(() => {
-    if (step !== 5 || districtsFetched) return;
-    setDistrictsFetched(true);
-    setDistrictsLoading(true);
-    fetch(`${API_URL}/destinations`)
+    if (step !== 5 || attractionsFetched) return;
+    setAttractionsFetched(true);
+    fetch(`${API_URL}/destinations?limit=100`)
       .then(async res => {
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();
-        const list: DistrictItem[] = (
+        const list: AttractionItem[] = (
           Array.isArray(data) ? data :
           Array.isArray(data?.data) ? data.data : []
-        ).filter((d: DistrictItem) =>
-          d.name && d.latitude != null && d.longitude != null
-        );
-        setAllDistricts(list);
+        ).filter((d: AttractionItem) => d.name && d.latitude != null && d.longitude != null);
+        setAttractions(list);
       })
-      .catch(() => {
-        setDistrictsFetched(false); // allow retry
-      })
-      .finally(() => setDistrictsLoading(false));
-  }, [step, districtsFetched]);
+      .catch(() => setAttractionsFetched(false));
+  }, [step, attractionsFetched]);
+
+  // ── Debounced geocoding search ────────────────────────────────────────────────
+  useEffect(() => {
+    if (geoDebounceRef.current) clearTimeout(geoDebounceRef.current);
+    if (districtSearch.trim().length < 2) { setGeoResults([]); setGeoSearching(false); return; }
+    setGeoSearching(true);
+    geoDebounceRef.current = setTimeout(async () => {
+      const results = await searchPlaces(districtSearch);
+      setGeoResults(results.filter(r =>
+        !extraDestinations.some(e => e.name === r.place_name) &&
+        !attractions.some(a => a.name.toLowerCase() === r.place_name.toLowerCase())
+      ));
+      setGeoSearching(false);
+    }, 350);
+    return () => { if (geoDebounceRef.current) clearTimeout(geoDebounceRef.current); };
+  }, [districtSearch, extraDestinations, attractions]);
 
   // ── Fetch vehicles when step 6 is reached (cached after first load) ────────
   const vehiclesFetchedRef = useRef(false);
 
-  // ── Build map markers from selected destinations + extras ────────────────────────
+  // ── Build map markers from selected attractions + extras ─────────────────────
   const allMarkers = useMemo<MapboxMarker[]>(() => {
-    const selected: MapboxMarker[] = destinations
-      .filter((name) => SRI_LANKA_DESTINATION_COORDS[name])
-      .map((name) => {
-        const [lng, lat] = SRI_LANKA_DESTINATION_COORDS[name];
-        return { id: name, name, latitude: lat, longitude: lng, color: '#0d9488' };
-      });
-    const extras: MapboxMarker[] = extraDestinations.map((d) => ({
-      id: d.id,
-      name: d.name,
-      latitude: d.latitude,
-      longitude: d.longitude,
-      color: '#7c3aed',
+    const selected: MapboxMarker[] = attractions
+      .filter(a => destinations.includes(a.id) && a.latitude && a.longitude)
+      .map(a => ({ id: a.id, name: a.name, latitude: Number(a.latitude), longitude: Number(a.longitude), color: '#0d9488' }));
+    const extras: MapboxMarker[] = extraDestinations.map(d => ({
+      id: d.id, name: d.name, latitude: d.latitude, longitude: d.longitude, color: '#7c3aed',
     }));
     return [...selected, ...extras];
-  }, [destinations, extraDestinations]);
+  }, [destinations, extraDestinations, attractions]);
   useEffect(() => {
     if (step !== 6 || vehiclesFetchedRef.current) return;
     vehiclesFetchedRef.current = true;
@@ -355,7 +334,8 @@ export default function CustomizeTourPage() {
     setError(null);
     setSubmitting(true);
     const message = buildMessage({
-      tourTypes, duration, groupSize, budget, startDate, destinations,
+      tourTypes, duration, groupSize, budget, startDate,
+      destinations: attractions.filter(a => destinations.includes(a.id)).map(a => a.name),
       extraDestinations: extraDestinations.map(d => d.name), specialRequests,
       selectedVehicleName: vehicles.find((v) => v.id === selectedVehicleId)
         ? getVehicleName(vehicles.find((v) => v.id === selectedVehicleId)!)
@@ -547,13 +527,15 @@ export default function CustomizeTourPage() {
                     <div>
                       <FieldLabel>Preferred Destinations in Sri Lanka</FieldLabel>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {SRI_LANKA_DESTINATIONS.map((d) => {
-                          const active = destinations.includes(d.name);
+                        {attractions.length === 0 ? (
+                          <p className="text-xs text-gray-400">Loading destinations…</p>
+                        ) : attractions.map((a) => {
+                          const active = destinations.includes(a.id);
                           return (
-                            <button suppressHydrationWarning key={d.name} type="button" onClick={() => toggleDestination(d.name)}
+                            <button suppressHydrationWarning key={a.id} type="button" onClick={() => toggleDestination(a.id)}
                               className={['inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all cursor-pointer',
                                 active ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-400'].join(' ')}>
-                              {active ? '📍' : '○'} {d.name}
+                              {active ? '📍' : '○'} {a.name}
                             </button>
                           );
                         })}
@@ -572,42 +554,38 @@ export default function CustomizeTourPage() {
                           type="text"
                           value={districtSearch}
                           onChange={e => setDistrictSearch(e.target.value)}
-                          placeholder={districtsLoading ? 'Loading destinations…' : 'Type to search destinations…'}
-                          disabled={districtsLoading}
+                          placeholder="Type to search any place in Sri Lanka…"
                           className={inputCls}
                         />
 
+                        {/* Searching indicator */}
+                        {geoSearching && (
+                          <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-xs text-gray-400">
+                            Searching…
+                          </div>
+                        )}
+
                         {/* Dropdown results */}
-                        {filteredDistricts.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 z-20 mt-1
-                                          bg-white border border-gray-200 rounded-xl
-                                          shadow-lg overflow-hidden max-h-48 overflow-y-auto">
-                            {filteredDistricts.map(d => (
+                        {!geoSearching && geoResults.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                            {geoResults.map(r => (
                               <button
-                                key={d.id}
+                                key={r.place_name}
                                 type="button"
-                                onClick={() => addExtraDestination(d)}
-                                className="w-full text-left px-4 py-2.5 text-sm
-                                           text-gray-700 hover:bg-teal-50
-                                           hover:text-teal-700 transition-colors
-                                           flex items-center gap-2 border-b
-                                           border-gray-50 last:border-0"
+                                onClick={() => addExtraDestination(r)}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors flex items-center gap-2 border-b border-gray-50 last:border-0"
                               >
                                 <span className="text-violet-500">🟣</span>
-                                {d.name}
+                                {r.place_name}
                               </button>
                             ))}
                           </div>
                         )}
 
                         {/* No results hint */}
-                        {districtSearch.trim().length > 0 &&
-                         filteredDistricts.length === 0 &&
-                         !districtsLoading && (
-                          <div className="absolute top-full left-0 right-0 z-20 mt-1
-                                          bg-white border border-gray-200 rounded-xl
-                                          shadow-sm px-4 py-3 text-xs text-gray-400">
-                            No matching districts found.
+                        {!geoSearching && districtSearch.trim().length >= 2 && geoResults.length === 0 && (
+                          <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 text-xs text-gray-400">
+                            No places found.
                           </div>
                         )}
                       </div>
