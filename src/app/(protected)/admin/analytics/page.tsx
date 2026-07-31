@@ -107,7 +107,6 @@ export default function AdminAnalyticsPage() {
                   <li key={d.id} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-bold text-gray-400 w-4">{i + 1}</span>
                     <p className="text-sm text-gray-800 flex-1">{d.name}</p>
-                    <span className="text-xs text-gray-400">{d.attractions?.length ?? 0} attractions</span>
                   </li>
                 ))}
               </ul>

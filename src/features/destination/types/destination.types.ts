@@ -10,6 +10,15 @@ export type DestinationCategory =
 
 export type TourCategoryName = 'ADVENTURE' | 'NATURE' | 'ROMANTIC' | 'WILDLIFE' | 'FAMILY' | 'CULTURAL' | 'BEACH' | 'LUXURY';
 
+export interface WeatherInfo {
+  temperature?: string;
+  humidity?: string;
+  rainfall?: string;
+  condition?: string;
+  climate?: string;
+  bestMonths?: string[];
+}
+
 export interface Destination {
   id: string;
   name: string;
@@ -19,14 +28,7 @@ export interface Destination {
   coverImage?: string;
   latitude: number;
   longitude: number;
-  weatherInfo?: {
-    temperature?: string;
-    humidity?: string;
-    rainfall?: string;
-    condition?: string;
-    climate?: string;
-    bestMonths?: string[];
-  };
+  weatherInfo?: WeatherInfo;
   bestVisitingSeason?: string;
   travelTips?: string;
   estimatedVisitingTime?: string;

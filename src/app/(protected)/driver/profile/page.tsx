@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Camera } from 'lucide-react';
 
 export default function DriverProfilePage() {
-  const user = useSelector((s: RootState) => s.user);
+  const user = useSelector((s: RootState) => s.user.user);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [form, setForm] = useState({

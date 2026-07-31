@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Star, Plus } from 'lucide-react';
-import { useDistricts } from '@/features/destination';
-import { DestinationAPI } from '@/features/destination';
+import { useDistricts, DestinationAPI } from '@/features/destination';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function AdminDestinationsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const { data: districts, isLoading } = useDistricts(search || undefined);
@@ -34,7 +35,7 @@ export default function AdminDestinationsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Destination Management</h1>
         <button
-          onClick={() => toast.info('Add destination form — connect to modal or page')}
+          onClick={() => router.push('/admin/destinations/create')}
           className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add Destination
@@ -53,7 +54,7 @@ export default function AdminDestinationsPage() {
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              {['Name', 'Best Season', 'Attractions', 'Featured', 'Actions'].map(h => (
+              {['Name', 'Best Season', 'Status', 'Featured', 'Actions'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -71,7 +72,12 @@ export default function AdminDestinationsPage() {
                   <tr key={d.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
                     <td className="px-4 py-3 text-gray-600">{d.bestVisitingSeason}</td>
-                    <td className="px-4 py-3 text-gray-600">{d.attractions?.length ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{d.bestVisitingSeason ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        d.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      }`}>{d.status}</span>
+                    </td>
                     <td className="px-4 py-3">
                       {d.featured
                         ? <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">Featured</span>
@@ -81,7 +87,7 @@ export default function AdminDestinationsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => toast.info(`Edit destination ${d.id}`)}
+                          onClick={() => router.push(`/admin/destinations/${d.id}/edit`)}
                           className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded"
                           title="Edit"
                         >

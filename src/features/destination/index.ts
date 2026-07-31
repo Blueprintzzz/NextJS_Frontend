@@ -7,6 +7,7 @@ export { AttractionDetail } from './components/AttractionDetail';
 export { AttractionList } from './components/AttractionList';
 export { CategoryFilter } from './components/CategoryFilter';
 export { WeatherInfo } from './components/WeatherInfo';
+export { CreateDestinationForm } from './components/CreateDestinationForm';
 export { SriLankaMap } from './components/SriLankaMap';
 
 export {
@@ -36,6 +37,7 @@ export type {
   TourCategory,
   TourCategoryName,
   MapData,
+  WeatherInfo as WeatherInfoData,
   // Legacy aliases
   District,
   Attraction,

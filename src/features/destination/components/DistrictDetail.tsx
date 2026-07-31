@@ -25,7 +25,7 @@ export function DistrictDetail({ district }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <h3 className="font-semibold text-gray-800">Weather</h3>
-          <WeatherInfo weather={district.weatherInfo} />
+          {district.weatherInfo && <WeatherInfo weather={district.weatherInfo} />}
         </div>
         <div className="space-y-1">
           <h3 className="font-semibold text-gray-800">Best Time to Visit</h3>

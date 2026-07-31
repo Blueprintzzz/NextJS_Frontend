@@ -54,7 +54,7 @@ export function SriLankaMap({ selectedId, onDistrictClick, filterCategory }: Pro
   const filteredNames = new Set(
     filterCategory
       ? districts
-          .filter((d) => d.attractions?.some((a) => a.category === filterCategory))
+          .filter((d) => d.category === filterCategory)
           .map((d) => d.name)
       : districts.map((d) => d.name)
   );

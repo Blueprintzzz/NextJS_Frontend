@@ -56,8 +56,8 @@ export function getAttractionCategoryLabel(category: AttractionCategory): string
   return map[category];
 }
 
-export function formatEntryFee(fee: number): string {
-  if (fee === 0) return 'Free';
+export function formatEntryFee(fee: number | undefined): string {
+  if (fee == null || fee === 0) return 'Free';
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(fee);
 }
 

@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 type Tab = 'profile' | 'password';
 
 export default function TouristProfilePage() {
-  const user = useAppSelector((s) => s.user);
-  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined;
+  const user = useAppSelector((s) => s.user.user);
+  const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || undefined;
   const [tab, setTab] = useState<Tab>('profile');
 
   // Profile form

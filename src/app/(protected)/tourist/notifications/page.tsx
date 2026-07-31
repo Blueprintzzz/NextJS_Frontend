@@ -42,7 +42,7 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 ];
 
 export default function NotificationsPage() {
-  const orgId = useAppSelector((s) => s.user.userId ?? '');
+  const orgId = useAppSelector((s) => s.user.user?.id ?? '');
   const qc = useQueryClient();
   const [filter, setFilter] = useState<FilterTab>('all');
 

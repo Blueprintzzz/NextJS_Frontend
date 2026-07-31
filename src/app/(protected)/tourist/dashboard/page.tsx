@@ -7,8 +7,8 @@ import { BookingStatusBadge } from '@/features/booking/components/BookingStatusB
 import { formatCurrency } from '@/features/booking/utils/booking.utils';
 
 export default function TouristDashboardPage() {
-  const user = useAppSelector((s) => s.user);
-  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined;
+  const user = useAppSelector((s) => s.user.user);
+  const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || undefined;
   const { data: bookingsData, isLoading } = useBookingData({ limit: 5 });
 
   const upcoming = bookingsData.data.filter((b) =>
