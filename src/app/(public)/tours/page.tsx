@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, Package } from 'lucide-react';
@@ -28,6 +29,7 @@ const DURATION_OPTIONS = [
 ];
 
 export default function ToursPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PackageCategory | ''>('');
@@ -70,6 +72,14 @@ export default function ToursPage() {
 
   const hasFilters = search || selectedCategory || minDuration || maxDuration || minPrice || maxPrice;
 
+  function handleCustomizeTour() {
+    const raw = localStorage.getItem('tfx_auth');
+    if (!raw) { router.push('/login?redirect=/tours/customize'); return; }
+    const { accessToken } = JSON.parse(raw);
+    if (!accessToken) { router.push('/login?redirect=/tours/customize'); return; }
+    router.push('/tours/customize');
+  }
+
   return (
     <main>
       {/* Hero */}
@@ -105,12 +115,12 @@ export default function ToursPage() {
 
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="text-white/60 text-sm">or</span>
-            <Link
-              href="/tours/customize"
+            <button
+              onClick={handleCustomizeTour}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-white rounded-full text-sm font-semibold transition-colors shadow-lg"
             >
               ✨ Customize Your Tour
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -253,12 +263,12 @@ export default function ToursPage() {
               <p className="text-teal-100 text-xs leading-relaxed mb-4">
                 Build a fully customized tour package tailored exactly to your dates, group size, and interests.
               </p>
-              <Link
-                href="/tours/customize"
+              <button
+                onClick={handleCustomizeTour}
                 className="block w-full text-center py-2.5 px-4 bg-white text-teal-700 rounded-xl text-sm font-bold hover:bg-teal-50 transition-colors"
               >
                 Build Custom Package →
-              </Link>
+              </button>
             </div>
           </aside>
 
@@ -285,12 +295,12 @@ export default function ToursPage() {
                   </p>
                 </div>
               </div>
-              <Link
-                href="/tours/customize"
+              <button
+                onClick={handleCustomizeTour}
                 className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
               >
                 ✨ Customize Tour
-              </Link>
+              </button>
             </div>
 
             <div className="flex items-center justify-between mb-6">

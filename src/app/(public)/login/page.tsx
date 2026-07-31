@@ -47,19 +47,12 @@ export default function LoginPage() {
         refreshToken: response.refreshToken,
       }));
 
-      // Redirect: use callbackUrl if present and valid (for tourists), else role-based dashboard
-      const defaultRedirect = ROLE_REDIRECTS[response.user.role] ?? '/bookings';
-      let destination = defaultRedirect;
-      
-      if (response.user.role === 'TOURIST' && callbackUrl) {
-        // Validate callbackUrl is a relative path to prevent open-redirect attacks
-        const decoded = decodeURIComponent(callbackUrl);
-        if (decoded.startsWith('/') && !decoded.startsWith('//')) {
-          destination = decoded;
-        }
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo && response.user.role === 'TOURIST') {
+        router.replace(redirectTo);
+      } else {
+        router.replace(ROLE_REDIRECTS[response.user.role] ?? '/bookings');
       }
-
-      router.replace(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {

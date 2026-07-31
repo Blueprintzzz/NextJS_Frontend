@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
@@ -204,7 +205,22 @@ function parseBudget(budget: string): number | null {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CustomizeTourPage() {
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    const raw = localStorage.getItem('tfx_auth');
+    if (!raw) { router.replace('/login?redirect=/tours/customize'); return; }
+    try {
+      const { accessToken, user } = JSON.parse(raw);
+      if (!accessToken || !user) { router.replace('/login?redirect=/tours/customize'); return; }
+      if (user.role !== 'TOURIST') { router.replace('/'); return; }
+      setAuthChecked(true);
+    } catch {
+      router.replace('/login?redirect=/tours/customize');
+    }
+  }, [router]);
 
   const [name,  setName]  = useState('');
   const [email, setEmail] = useState('');
@@ -420,6 +436,15 @@ export default function CustomizeTourPage() {
       setSubmitting(false);
     }
   };
+
+  // ── Auth loading guard ────────────────────────────────────────────────────
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (submitted) {
