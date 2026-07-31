@@ -10,6 +10,7 @@ export { EditVehicleForm } from './components/EditVehicleForm';
 export { VehicleRecommendation } from './components/VehicleRecommendation';
 
 export {
+  useDriverVehicles,
   useVehicles,
   useVehicleById,
   useCheckAvailability,
@@ -33,6 +34,7 @@ export {
 
 export type {
   Vehicle,
+  VehicleEntity,
   VehicleType,
   VehicleStatus,
   VehicleFilters,

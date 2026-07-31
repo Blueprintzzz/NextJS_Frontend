@@ -1,9 +1,50 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { VehicleAPI } from '../api/vehicle.api';
-import type { VehicleFilters, CreateVehicleInput, VehicleType } from '../types/vehicle.types';
+import type { VehicleFilters, CreateVehicleInput, VehicleType, VehicleEntity } from '../types/vehicle.types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+function getAuthHeaders() {
+  if (typeof window === 'undefined') return {};
+  const raw = localStorage.getItem('tfx_auth');
+  if (!raw) return {};
+  const { accessToken } = JSON.parse(raw);
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
+function getDriverId(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem('tfx_auth');
+  if (!raw) return null;
+  const { user } = JSON.parse(raw);
+  return user?.id ?? null;
+}
+
+export function useDriverVehicles() {
+  const [vehicles, setVehicles] = useState<VehicleEntity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const driverId = getDriverId();
+    if (!driverId) { setIsLoading(false); setIsError(true); return; }
+    setIsLoading(true);
+    fetch(`${API_URL}/vehicles/driver/${driverId}`, { headers: getAuthHeaders() })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        setVehicles(Array.isArray(data) ? data : data?.data ?? []);
+      })
+      .catch(() => setIsError(true))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  return { data: vehicles, isLoading, isError };
+}
 
 export function useVehicles(filters?: VehicleFilters) {
   const { data, isLoading, isFetching, isError } = useQuery({

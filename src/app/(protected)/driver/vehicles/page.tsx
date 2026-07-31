@@ -3,11 +3,11 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Plus, CalendarCheck } from 'lucide-react';
-import { useVehicles, useDeleteVehicle } from '@/features/vehicle';
+import { useDriverVehicles, useDeleteVehicle } from '@/features/vehicle';
 
 export default function DriverVehiclesPage() {
   const router = useRouter();
-  const { data, isLoading } = useVehicles();
+  const { data, isLoading } = useDriverVehicles();
   const deleteMutation = useDeleteVehicle();
 
   return (
@@ -39,7 +39,7 @@ export default function DriverVehiclesPage() {
             <div key={v.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative h-40 bg-gray-100">
                 {v.images[0] ? (
-                  <Image src={v.images[0]} alt={v.name ?? 'Vehicle image'} fill className="object-cover" />
+                  <Image src={v.images[0]} alt={v.vehicleModelName ?? v.registrationNumber} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">🚗</div>
                 )}
@@ -48,7 +48,8 @@ export default function DriverVehiclesPage() {
                 </span>
               </div>
               <div className="p-4">
-                <p className="font-semibold text-gray-900">{v.name}</p>
+                <p className="font-semibold text-gray-900">{v.vehicleModelName ?? v.registrationNumber}</p>
+                <p className="text-xs text-gray-400">{v.registrationNumber}</p>
                 <p className="text-sm text-gray-500">{v.type} · {v.capacity} seats · ${v.pricePerDay}/day</p>
                 <div className="flex items-center gap-2 mt-3">
                   <button
@@ -58,7 +59,7 @@ export default function DriverVehiclesPage() {
                     <Pencil className="w-3.5 h-3.5" /> Edit
                   </button>
                   <button
-                    onClick={() => router.push(`/driver/vehicles/${v.id}/edit`)}
+                    onClick={() => router.push(`/driver/vehicles/${v.id}/availability`)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-teal-50 hover:text-teal-600 transition-colors"
                   >
                     <CalendarCheck className="w-3.5 h-3.5" /> Availability

@@ -8,7 +8,7 @@ export interface VehicleAvailability {
 
 export interface Vehicle {
   id: string;
-  name: string;
+  name?: string;
   type: VehicleType;
   capacity: number;
   pricePerDay: number;
@@ -17,6 +17,24 @@ export interface Vehicle {
   description: string;
   status: VehicleStatus;
   availability?: VehicleAvailability[];
+}
+
+export interface VehicleEntity {
+  id: string;
+  driverId: string;
+  vehicleModelId: string;
+  vehicleModelName?: string;
+  type: VehicleType;
+  capacity: number;
+  pricePerDay: number;
+  images: string[];
+  features: string[];
+  status: VehicleStatus;
+  description?: string;
+  registrationNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  availability?: any[];
 }
 
 export interface VehicleFilters {
