@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, User, LogOut } from 'lucide-react';
@@ -9,8 +10,25 @@ import { useAuth } from '@/features/auth';
 
 export function PublicHeader() {
   const { user, isAuthenticated, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   function AuthButtons() {
+    // Render the unauthenticated state on the server and on first paint
+    // so SSR HTML always matches the client's initial render.
+    if (!mounted) {
+      return (
+        <div className="flex items-center gap-2">
+          <Link
+            href="/login"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-600 border border-teal-600 rounded-lg hover:bg-teal-50 transition-colors"
+          >
+            <User className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign In</span>
+          </Link>
+        </div>
+      );
+    }
     if (isAuthenticated && user) {
       return (
         <div className="flex items-center gap-2">
