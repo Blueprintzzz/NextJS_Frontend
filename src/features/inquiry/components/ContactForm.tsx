@@ -64,6 +64,7 @@ export function ContactForm() {
               value={form.category}
               onChange={(e) => set('category', e.target.value as InquiryCategory)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mt-1"
+              suppressHydrationWarning
             >
               {CATEGORIES.map((c) => <option key={c} value={c}>{c.charAt(0) + c.slice(1).toLowerCase()}</option>)}
             </select>
