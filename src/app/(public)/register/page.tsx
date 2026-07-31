@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, User, Car } from 'lucide-react';
 import { authApi } from '@/lib/api';
@@ -34,6 +34,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +42,11 @@ export default function RegisterPage() {
     setError(null);
     try {
       await authApi.register({ email, password, firstName, lastName, role });
-      router.replace('/login?registered=true');
+      const redirect = searchParams.get('redirect');
+      const loginUrl = redirect
+        ? `/login?registered=true&redirect=${encodeURIComponent(redirect)}`
+        : '/login?registered=true';
+      router.replace(loginUrl);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -182,7 +187,10 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-sm text-gray-500 text-center">
             Already have an account?{' '}
-            <Link href="/login" className="text-teal-600 font-semibold hover:text-teal-700">
+            <Link
+              href={searchParams.get('redirect') ? `/login?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/login'}
+              className="text-teal-600 font-semibold hover:text-teal-700"
+            >
               Sign in
             </Link>
           </p>

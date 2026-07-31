@@ -26,7 +26,6 @@ export default function LoginPage() {
   const dispatch = useAppDispatch();
 
   const registered = searchParams.get('registered') === 'true';
-  const callbackUrl = searchParams.get('callbackUrl');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
