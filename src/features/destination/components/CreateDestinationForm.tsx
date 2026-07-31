@@ -10,6 +10,9 @@ import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { useCreateDestination } from '../hooks/useDestination';
 import type { DestinationCategory } from '../types/destination.types';
 import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
+import { Search } from 'lucide-react';
+import { searchPlaces, reverseGeocode } from '@/lib/geocoding';
+import type { GeoSuggestion } from '@/lib/geocoding';
 
 const STEPS = [
   { label: 'Basic Info',   description: 'Name, category, status' },
@@ -22,15 +25,10 @@ const CATEGORIES: DestinationCategory[] = [
   'TEMPLE', 'BEACH', 'MOUNTAIN', 'WATERFALL', 'HISTORIC', 'WILDLIFE', 'CITY', 'NATURE',
 ];
 
-interface GeoSuggestion {
-  place_name: string;
-  center: [number, number]; // [lng, lat]
-}
-
 const EMPTY = {
   name: '', description: '', category: 'NATURE' as DestinationCategory,
   status: 'ACTIVE', featured: false,
-  latitude: '', longitude: '',
+  latitude: '', longitude: '', district: '',
   bestVisitingSeason: '', estimatedVisitingTime: '', openingHours: '', entryFee: '',
   travelTips: '',
   temperature: '', humidity: '', rainfall: '', condition: '', climate: '',
@@ -68,8 +66,10 @@ export function CreateDestinationForm() {
   const mutation = useCreateDestination();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [districtLoading, setDistrictLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -86,32 +86,56 @@ export function CreateDestinationForm() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const fetchSuggestions = async (value: string) => {
+    const results = await searchPlaces(value);
+    if (results.length > 0) {
+      setSuggestions(results);
+      setShowSuggestions(true);
+    }
+  };
+
   const handleNameChange = (value: string) => {
     set('name', value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (value.trim().length < 2) { setSuggestions([]); return; }
-    debounceRef.current = setTimeout(async () => {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      if (!token) return;
-      try {
-        const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?types=place,poi,locality,region&limit=5&access_token=${token}`
-        );
-        const data = await res.json();
-        setSuggestions(data.features ?? []);
-        setShowSuggestions(true);
-      } catch { /* ignore */ }
-    }, 300);
+    debounceRef.current = setTimeout(() => fetchSuggestions(value), 300);
+  };
+
+  const handleSearchClick = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (form.name.trim().length >= 2) fetchSuggestions(form.name.trim());
+  };
+
+  const reverseGeocodeDistrict = async (lat: number, lng: number) => {
+    setDistrictLoading(true);
+    const { district } = await reverseGeocode(lat, lng);
+    setForm((f) => ({ ...f, district }));
+    setDistrictLoading(false);
   };
 
   const handleSelectSuggestion = (s: GeoSuggestion) => {
     const [lng, lat] = s.center;
-    setForm((f) => ({ ...f, name: s.place_name.split(',')[0], latitude: String(lat), longitude: String(lng) }));
+    const shortName = s.place_name.split(',')[0].trim();
+    setForm((f) => ({ ...f, name: shortName, latitude: String(lat), longitude: String(lng) }));
     setSuggestions([]);
     setShowSuggestions(false);
+    reverseGeocodeDistrict(lat, lng);
   };
 
   const handleSubmit = () => {
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = 'Name is required';
+    if (!form.description.trim()) newErrors.description = 'Description is required';
+    if (!form.latitude || isNaN(Number(form.latitude))) newErrors.latitude = 'Valid latitude is required';
+    if (!form.longitude || isNaN(Number(form.longitude))) newErrors.longitude = 'Valid longitude is required';
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      // Jump to the first step that has an error
+      if (newErrors.name || newErrors.description) { setStep(0); }
+      else if (newErrors.latitude || newErrors.longitude) { setStep(1); }
+      return;
+    }
+    setErrors({});
     const weatherInfo = {
       temperature: form.temperature || undefined,
       humidity:    form.humidity    || undefined,
@@ -126,10 +150,10 @@ export function CreateDestinationForm() {
         name:                   form.name.trim(),
         description:            form.description.trim(),
         category:               form.category,
-        status:                 form.status,
         featured:               form.featured,
-        latitude:               form.latitude  ? Number(form.latitude)  : undefined,
-        longitude:              form.longitude ? Number(form.longitude) : undefined,
+        latitude:               Number(form.latitude),
+        longitude:              Number(form.longitude),
+        district:               form.district.trim() || undefined,
         bestVisitingSeason:     form.bestVisitingSeason.trim()     || undefined,
         estimatedVisitingTime:  form.estimatedVisitingTime.trim()  || undefined,
         openingHours:           form.openingHours.trim()           || undefined,
@@ -154,24 +178,42 @@ export function CreateDestinationForm() {
         <StepCard>
           <div ref={wrapperRef} className="relative">
             <FieldLabel htmlFor="dest-name">Name *</FieldLabel>
-            <Input
-              id="dest-name"
-              required
-              autoComplete="off"
-              placeholder="e.g. Sigiriya Rock Fortress"
-              value={form.name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            />
+            <div className="relative flex items-center">
+              <Input
+                id="dest-name"
+                required
+                autoComplete="off"
+                placeholder="e.g. Sigiriya Rock Fortress"
+                value={form.name}
+                className="pr-10"
+                onChange={(e) => { handleNameChange(e.target.value); setErrors((p) => ({ ...p, name: '' })); }}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
+              />
+              <button
+                type="button"
+                onClick={handleSearchClick}
+                className="absolute right-2 text-gray-400 hover:text-teal-600 transition-colors"
+                tabIndex={-1}
+              >
+                <Search size={16} />
+              </button>
+            </div>
+            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             {showSuggestions && suggestions.length > 0 && (
               <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg text-sm overflow-hidden">
                 {suggestions.map((s, i) => (
                   <li
                     key={i}
                     onMouseDown={() => handleSelectSuggestion(s)}
-                    className="px-3 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 border-b border-gray-100 last:border-0 truncate"
+                    className="px-3 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 border-b border-gray-100 last:border-0"
                   >
-                    {s.place_name}
+                    <div className="flex items-center gap-2">
+                      <span className="truncate flex-1">{s.place_name}</span>
+                      {s.place_type.includes('poi') && (
+                        <span className="shrink-0 text-[10px] font-medium bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">Attraction</span>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -186,8 +228,9 @@ export function CreateDestinationForm() {
               rows={4}
               placeholder="Describe this destination…"
               value={form.description}
-              onChange={(e) => set('description', e.target.value)}
+              onChange={(e) => { set('description', e.target.value); setErrors((p) => ({ ...p, description: '' })); }}
             />
+            {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -235,26 +278,38 @@ export function CreateDestinationForm() {
         <StepCard>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <FieldLabel htmlFor="dest-lat" hint="Decimal degrees e.g. 7.9570">Latitude</FieldLabel>
+              <FieldLabel htmlFor="dest-lat" hint="Decimal degrees e.g. 7.9570">Latitude *</FieldLabel>
               <Input
                 id="dest-lat"
                 type="number"
                 step="any"
                 placeholder="7.9570"
                 value={form.latitude}
-                onChange={(e) => set('latitude', e.target.value)}
+                onChange={(e) => { set('latitude', e.target.value); setErrors((p) => ({ ...p, latitude: '' })); }}
+                onBlur={() => {
+                  const lat = parseFloat(form.latitude);
+                  const lng = parseFloat(form.longitude);
+                  if (!isNaN(lat) && !isNaN(lng)) reverseGeocodeDistrict(lat, lng);
+                }}
               />
+              {errors.latitude && <p className="mt-1 text-xs text-red-500">{errors.latitude}</p>}
             </div>
             <div>
-              <FieldLabel htmlFor="dest-lng" hint="Decimal degrees e.g. 80.7603">Longitude</FieldLabel>
+              <FieldLabel htmlFor="dest-lng" hint="Decimal degrees e.g. 80.7603">Longitude *</FieldLabel>
               <Input
                 id="dest-lng"
                 type="number"
                 step="any"
                 placeholder="80.7603"
                 value={form.longitude}
-                onChange={(e) => set('longitude', e.target.value)}
+                onChange={(e) => { set('longitude', e.target.value); setErrors((p) => ({ ...p, longitude: '' })); }}
+                onBlur={() => {
+                  const lat = parseFloat(form.latitude);
+                  const lng = parseFloat(form.longitude);
+                  if (!isNaN(lat) && !isNaN(lng)) reverseGeocodeDistrict(lat, lng);
+                }}
               />
+              {errors.longitude && <p className="mt-1 text-xs text-red-500">{errors.longitude}</p>}
             </div>
             <div>
               <FieldLabel htmlFor="dest-season">Best Visiting Season</FieldLabel>
@@ -295,6 +350,22 @@ export function CreateDestinationForm() {
                 onChange={(e) => set('entryFee', e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <FieldLabel
+              htmlFor="dest-district"
+              hint={districtLoading ? 'Detecting district…' : 'Auto-detected from coordinates. You can edit.'}
+            >
+              District
+            </FieldLabel>
+            <Input
+              id="dest-district"
+              placeholder="e.g. Kegalle District"
+              value={form.district}
+              onChange={(e) => set('district', e.target.value)}
+              disabled={districtLoading}
+            />
           </div>
 
           <div>

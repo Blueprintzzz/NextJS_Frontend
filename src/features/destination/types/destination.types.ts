@@ -38,6 +38,7 @@ export interface Destination {
   status: string;
   createdAt: string;
   updatedAt: string;
+  district?: string;
 }
 
 export interface MapData {
