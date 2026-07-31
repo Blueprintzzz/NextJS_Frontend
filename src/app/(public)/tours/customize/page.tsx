@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
+import type { MapboxMarker } from '@/components/shared/MapboxMapDynamic';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -55,8 +55,23 @@ const SRI_LANKA_DESTINATIONS = [
   { name: 'Arugam Bay',   lat: 6.8400, lng: 81.8360 },
 ] as const;
 
-const SRI_LANKA_CENTER: [number, number] = [80.7718, 7.8731];
-const SRI_LANKA_DEFAULT_ZOOM = 6.6;
+const SRI_LANKA_DESTINATION_COORDS: Record<string, [number, number]> = {
+  'Colombo':      [79.8612, 6.9271],
+  'Kandy':        [80.6337, 7.2906],
+  'Galle':        [80.2210, 6.0535],
+  'Ella':         [81.0466, 6.8667],
+  'Sigiriya':     [80.7603, 7.9570],
+  'Nuwara Eliya': [80.7891, 6.9497],
+  'Yala':         [81.5165, 6.3728],
+  'Mirissa':      [80.4589, 5.9483],
+  'Bentota':      [79.9955, 6.4260],
+  'Trincomalee':  [81.2152, 8.5874],
+  'Jaffna':       [80.0255, 9.6615],
+  'Anuradhapura': [80.4037, 8.3114],
+  'Polonnaruwa':  [81.0188, 7.9403],
+  'Dambulla':     [80.6517, 7.8675],
+  'Arugam Bay':   [81.8360, 6.8400],
+};
 
 type DistrictItem = {
   id: string;
@@ -166,81 +181,6 @@ function Stepper({ current, labels, onStepClick }: { current: number; labels: st
   );
 }
 
-function DestinationMap({
-  selected,
-  extras,
-}: {
-  selected: string[];
-  extras: { name: string; latitude: number; longitude: number }[];
-}) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<mapboxgl.Map | null>(null);
-  const markersRef   = useRef<mapboxgl.Marker[]>([]);
-  const token        = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-  // Init map once
-  useEffect(() => {
-    if (!token || !mapContainer.current || mapRef.current) return;
-    mapboxgl.accessToken = token;
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/outdoors-v12',
-      center: SRI_LANKA_CENTER,
-      zoom: SRI_LANKA_DEFAULT_ZOOM,
-    });
-    mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    return () => { mapRef.current?.remove(); mapRef.current = null; };
-  }, [token]);
-
-  // Update markers whenever selection or extras change
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    const presetPoints = SRI_LANKA_DESTINATIONS.filter(d => selected.includes(d.name));
-
-    presetPoints.forEach(d => {
-      const marker = new mapboxgl.Marker({ color: '#0d9488' })
-        .setLngLat([d.lng, d.lat])
-        .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(d.name))
-        .addTo(mapRef.current as mapboxgl.Map);
-      markersRef.current.push(marker);
-    });
-
-    extras.forEach(d => {
-      const marker = new mapboxgl.Marker({ color: '#7c3aed' })
-        .setLngLat([d.longitude, d.latitude])
-        .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(d.name + ' ✦'))
-        .addTo(mapRef.current as mapboxgl.Map);
-      markersRef.current.push(marker);
-    });
-
-    const allPoints = [
-      ...presetPoints.map(d => ({ lng: d.lng, lat: d.lat })),
-      ...extras.map(d => ({ lng: d.longitude, lat: d.latitude })),
-    ];
-
-    if (allPoints.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      allPoints.forEach(p => bounds.extend([p.lng, p.lat]));
-      mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 10, duration: 600 });
-    } else {
-      mapRef.current.flyTo({ center: SRI_LANKA_CENTER, zoom: SRI_LANKA_DEFAULT_ZOOM, duration: 600 });
-    }
-  }, [selected, extras]);
-
-  if (!token) {
-    return (
-      <div className="w-full h-full min-h-[280px] rounded-xl bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-        Map preview unavailable
-      </div>
-    );
-  }
-  return <div ref={mapContainer} className="w-full h-full min-h-[280px] rounded-xl overflow-hidden" />;
-}
-
 // ── Vehicle type ─────────────────────────────────────────────────────────────
 
 type VehicleApiItem = {
@@ -344,7 +284,7 @@ export default function CustomizeTourPage() {
     if (step !== 5 || districtsFetched) return;
     setDistrictsFetched(true);
     setDistrictsLoading(true);
-    fetch(`${API_URL}/districts`)
+    fetch(`${API_URL}/destinations`)
       .then(async res => {
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();
@@ -364,6 +304,24 @@ export default function CustomizeTourPage() {
 
   // ── Fetch vehicles when step 6 is reached (cached after first load) ────────
   const vehiclesFetchedRef = useRef(false);
+
+  // ── Build map markers from selected destinations + extras ────────────────────────
+  const allMarkers = useMemo<MapboxMarker[]>(() => {
+    const selected: MapboxMarker[] = destinations
+      .filter((name) => SRI_LANKA_DESTINATION_COORDS[name])
+      .map((name) => {
+        const [lng, lat] = SRI_LANKA_DESTINATION_COORDS[name];
+        return { id: name, name, latitude: lat, longitude: lng, color: '#0d9488' };
+      });
+    const extras: MapboxMarker[] = extraDestinations.map((d) => ({
+      id: d.id,
+      name: d.name,
+      latitude: d.latitude,
+      longitude: d.longitude,
+      color: '#7c3aed',
+    }));
+    return [...selected, ...extras];
+  }, [destinations, extraDestinations]);
   useEffect(() => {
     if (step !== 6 || vehiclesFetchedRef.current) return;
     vehiclesFetchedRef.current = true;
@@ -614,7 +572,7 @@ export default function CustomizeTourPage() {
                           type="text"
                           value={districtSearch}
                           onChange={e => setDistrictSearch(e.target.value)}
-                          placeholder={districtsLoading ? 'Loading districts…' : 'Type to search districts…'}
+                          placeholder={districtsLoading ? 'Loading destinations…' : 'Type to search destinations…'}
                           disabled={districtsLoading}
                           className={inputCls}
                         />
@@ -690,9 +648,9 @@ export default function CustomizeTourPage() {
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Your route so far</p>
                     <div className="h-full min-h-[320px]">
-                      <DestinationMap
-                        selected={destinations}
-                        extras={extraDestinations}
+                      <MapboxMap
+                        markers={allMarkers}
+                        height="320px"
                       />
                     </div>
                     {/* Legend */}

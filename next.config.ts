@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['mapbox-gl'],
   images: {
     remotePatterns: [
       // Production backend on Render — update hostname to match your actual Render URL

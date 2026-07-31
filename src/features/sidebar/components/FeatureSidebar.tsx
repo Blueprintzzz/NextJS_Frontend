@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
@@ -43,10 +45,11 @@ export function FeatureSidebar() {
   const role = user?.role;
   const { logout } = useAuth();
 
-  if (!role) {
-    router.replace('/login');
-    return null;
-  }
+  useEffect(() => {
+    if (!role) router.replace('/login');
+  }, [role, router]);
+
+  if (!role) return null;
 
   const groups = getGroupsForRole(role);
 

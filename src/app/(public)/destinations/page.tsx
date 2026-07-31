@@ -1,17 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { Search, Grid3X3, List, MapPin } from 'lucide-react';
 import { DestinationCard } from '@/components/public/cards/DestinationCard';
 import { AttractionCard, CategoryFilter, useDestinations } from '@/features/destination';
+import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
 import type { DestinationCategory } from '@/features/destination';
 
-const LeafletMap = dynamic(
-  () => import('@/features/destination/components/LeafletMap').then((m) => ({ default: m.LeafletMap })),
-  { ssr: false, loading: () => <div className="h-[1000px] bg-gray-100 animate-pulse rounded-xl" /> }
-);
+const CATEGORY_COLORS: Record<string, string> = {
+  TEMPLE:    '#f59e0b',
+  BEACH:     '#06b6d4',
+  MOUNTAIN:  '#6366f1',
+  WATERFALL: '#0ea5e9',
+  HISTORIC:  '#8b5cf6',
+  WILDLIFE:  '#10b981',
+  CITY:      '#1e40af',
+  NATURE:    '#34d399',
+};
 
 const ATTRACTION_CATEGORIES: { value: DestinationCategory | 'ALL'; label: string }[] = [
   { value: 'ALL', label: 'All' },
@@ -24,16 +31,34 @@ const ATTRACTION_CATEGORIES: { value: DestinationCategory | 'ALL'; label: string
 ];
 
 export default function DestinationsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [attractionCategory, setAttractionCategory] = useState<DestinationCategory | 'ALL'>('ALL');
 
+  // Fetch all destinations for the map (no search filter so all pins show)
+  const { data: allDestData } = useDestinations({ limit: 200 });
   const { data: districts, isLoading: loadingDistricts } = useDestinations(search ? { search } : undefined);
   const { data: attractions, isLoading: loadingAttractions } = useDestinations(
     attractionCategory !== 'ALL' ? { category: attractionCategory } : undefined
   );
 
-  const displayAttractions = attractions.slice(0, 20);
+  const displayAttractions = (attractions?.data ?? []).slice(0, 20);
+
+  const mapMarkers = useMemo(
+    () =>
+      (allDestData?.data ?? [])
+        .filter((d) => d.latitude && d.longitude)
+        .map((d) => ({
+          id: d.id,
+          name: d.name,
+          latitude: Number(d.latitude),
+          longitude: Number(d.longitude),
+          color: CATEGORY_COLORS[d.category] ?? '#0d9488',
+          category: d.category,
+        })),
+    [allDestData?.data],
+  );
 
   return (
     <main>
@@ -86,7 +111,7 @@ export default function DestinationsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500 whitespace-nowrap">
-              {loadingDistricts ? 'Loading...' : `${districts.length} destinations`}
+              {loadingDistricts ? 'Loading...' : `${districts?.data?.length ?? 0} destinations`}
             </span>
             <div className="flex border border-gray-200 rounded-lg overflow-hidden">
               <button
@@ -112,9 +137,11 @@ export default function DestinationsPage() {
       <section className="py-12 bg-white" style={{ isolation: 'isolate' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Explore on the Map</h2>
-          <div className="h-[1000px] rounded-xl overflow-hidden shadow-sm">
-            <LeafletMap />
-          </div>
+          <MapboxMap
+            markers={mapMarkers}
+            height="600px"
+            onMarkerClick={(marker) => router.push(`/destinations/${marker.id}`)}
+          />
         </div>
       </section>
 
@@ -131,7 +158,7 @@ export default function DestinationsPage() {
                 <div key={i} className="h-72 rounded-2xl bg-gray-200 animate-pulse" />
               ))}
             </div>
-          ) : districts.length === 0 ? (
+          ) : (districts?.data?.length ?? 0) === 0 ? (
             <div className="text-center py-20">
               <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700">No destinations found</h3>
@@ -145,7 +172,7 @@ export default function DestinationsPage() {
                   : 'flex flex-col gap-6'
               }
             >
-              {districts.map((district) =>
+              {(districts?.data ?? []).map((district) =>
                 viewMode === 'grid' ? (
                   <DestinationCard key={district.id} district={district} />
                 ) : (
