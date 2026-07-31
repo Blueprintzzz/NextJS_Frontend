@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { FormStepper } from '@/components/shared/FormStepper';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { useCreateDestination } from '../hooks/useDestination';
 import type { DestinationCategory } from '../types/destination.types';
+import { MapboxMap } from '@/components/shared/MapboxMapDynamic';
 
 const STEPS = [
   { label: 'Basic Info',   description: 'Name, category, status' },
@@ -20,6 +21,11 @@ const STEPS = [
 const CATEGORIES: DestinationCategory[] = [
   'TEMPLE', 'BEACH', 'MOUNTAIN', 'WATERFALL', 'HISTORIC', 'WILDLIFE', 'CITY', 'NATURE',
 ];
+
+interface GeoSuggestion {
+  place_name: string;
+  center: [number, number]; // [lng, lat]
+}
 
 const EMPTY = {
   name: '', description: '', category: 'NATURE' as DestinationCategory,
@@ -62,9 +68,48 @@ export function CreateDestinationForm() {
   const mutation = useCreateDestination();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY);
+  const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const set = <K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node))
+        setShowSuggestions(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleNameChange = (value: string) => {
+    set('name', value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      if (!token) return;
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?types=place,poi,locality,region&limit=5&access_token=${token}`
+        );
+        const data = await res.json();
+        setSuggestions(data.features ?? []);
+        setShowSuggestions(true);
+      } catch { /* ignore */ }
+    }, 300);
+  };
+
+  const handleSelectSuggestion = (s: GeoSuggestion) => {
+    const [lng, lat] = s.center;
+    setForm((f) => ({ ...f, name: s.place_name.split(',')[0], latitude: String(lat), longitude: String(lng) }));
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = () => {
     const weatherInfo = {
@@ -107,15 +152,30 @@ export function CreateDestinationForm() {
       {/* ── Step 0 — Basic Info ─────────────────────────────────── */}
       {step === 0 && (
         <StepCard>
-          <div>
+          <div ref={wrapperRef} className="relative">
             <FieldLabel htmlFor="dest-name">Name *</FieldLabel>
             <Input
               id="dest-name"
               required
+              autoComplete="off"
               placeholder="e.g. Sigiriya Rock Fortress"
               value={form.name}
-              onChange={(e) => set('name', e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
             />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg text-sm overflow-hidden">
+                {suggestions.map((s, i) => (
+                  <li
+                    key={i}
+                    onMouseDown={() => handleSelectSuggestion(s)}
+                    className="px-3 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 border-b border-gray-100 last:border-0 truncate"
+                  >
+                    {s.place_name}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div>
@@ -247,6 +307,23 @@ export function CreateDestinationForm() {
               onChange={(e) => set('travelTips', e.target.value)}
             />
           </div>
+
+          {(() => {
+            const lat = parseFloat(form.latitude);
+            const lng = parseFloat(form.longitude);
+            const valid = !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+            return valid ? (
+              <div>
+                <FieldLabel>Map Preview</FieldLabel>
+                <MapboxMap
+                  height="300px"
+                  center={[lng, lat]}
+                  zoom={12}
+                  markers={[{ id: 'preview', name: form.name || 'New Destination', latitude: lat, longitude: lng }]}
+                />
+              </div>
+            ) : null;
+          })()}
         </StepCard>
       )}
 
