@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { PackageAPI } from '../api/package.api';
@@ -10,7 +11,33 @@ import type {
   PackageCategory,
 } from '../types/package.types';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
 const EMPTY: PackagePaginationResponse = { data: [], total: 0, page: 1, limit: 10, pages: 0 };
+
+export function useMyPackages(query?: PackageFilters) {
+  const [result, setResult] = useState<PackagePaginationResponse>({
+    data: [], total: 0, page: 1, limit: 20, pages: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const raw = localStorage.getItem('tfx_auth');
+    if (!raw) return;
+    const { accessToken } = JSON.parse(raw);
+    const params = new URLSearchParams();
+    if (query?.page) params.set('page', String(query.page));
+    if (query?.limit) params.set('limit', String(query.limit));
+    fetch(`${API_URL}/packages/my?${params}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then(res => res.json())
+      .then(data => setResult(data))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  return { data: result, isLoading };
+}
 
 export function usePackages(filters?: PackageFilters) {
   const { data, isLoading, isError } = useQuery({

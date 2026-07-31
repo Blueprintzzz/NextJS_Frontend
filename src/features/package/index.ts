@@ -12,6 +12,7 @@ export { PackageCategoryBadge } from './components/PackageCategoryBadge';
 
 export {
   usePackages,
+  useMyPackages,
   useFeaturedPackages,
   usePackageById,
   usePackagesByCategory,

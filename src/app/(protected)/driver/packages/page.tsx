@@ -7,7 +7,7 @@ import { Pencil, Clock, Users, Star, Trash2, ToggleLeft, ToggleRight } from 'luc
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PackageFilters, PackageCategoryBadge } from '@/features/package';
-import { usePackages, useDeletePackage, useUpdatePackage } from '@/features/package';
+import { useMyPackages, useDeletePackage, useUpdatePackage } from '@/features/package';
 import { formatPrice } from '@/features/package';
 import type { PackageCategory, TourPackage } from '@/features/package';
 
@@ -135,13 +135,7 @@ export default function DriverPackagesPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = usePackages({
-    search: filters.search || undefined,
-    category: filters.category,
-    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-    minDuration: filters.minDuration ? Number(filters.minDuration) : undefined,
-    maxDuration: filters.maxDuration ? Number(filters.maxDuration) : undefined,
+  const { data, isLoading, isError } = useMyPackages({
     page,
     limit: 12,
   });
