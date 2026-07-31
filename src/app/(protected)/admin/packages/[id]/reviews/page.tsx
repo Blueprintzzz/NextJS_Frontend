@@ -11,7 +11,7 @@ export default function PackageReviewsPage({ params }: { params: Promise<{ id: s
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/packages">
+        <Link href="/admin/packages">
           <Button variant="ghost" size="sm">← Back</Button>
         </Link>
         <h1 className="text-xl font-semibold text-gray-900">Package Reviews</h1>

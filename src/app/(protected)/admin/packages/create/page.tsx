@@ -8,7 +8,7 @@ export default function CreatePackagePage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-3 mb-4">
-        <Link href="/packages">
+        <Link href="/admin/packages">
           <Button variant="ghost" size="sm">← Back</Button>
         </Link>
         <div>

@@ -35,7 +35,8 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
 
     if (!token || !isTokenValid(token)) {
       dispatch(clearAuth());
-      router.replace('/login');
+      const currentPath = window.location.pathname + window.location.search;
+      router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
       return;
     }
 
@@ -54,7 +55,8 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
       const stored = localStorageGetJSON<TfxAuth>('tfx_auth');
       if (!stored?.accessToken || !isTokenValid(stored.accessToken)) {
         dispatch(clearAuth());
-        router.replace('/login');
+        const currentPath = window.location.pathname + window.location.search;
+        router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
       }
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -65,7 +67,8 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'tfx_auth' && !e.newValue) {
         dispatch(clearAuth());
-        router.replace('/login');
+        const currentPath = window.location.pathname + window.location.search;
+        router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
       }
     };
     window.addEventListener('storage', onStorage);

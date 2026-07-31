@@ -31,7 +31,7 @@ function getGroupsForRole(role: string | undefined): NavGroup[] {
     case 'TOURIST':
       return [touristGroup, bookingsGroup, reviewsGroup];
     case 'DRIVER':
-      return [driverGroup, driverVehiclesGroup, destinationsGroup];
+      return [driverGroup, destinationsGroup];
     case 'ADMIN':
       return [adminGroup, packagesGroup, destinationsGroup, reviewsGroup];
     default:

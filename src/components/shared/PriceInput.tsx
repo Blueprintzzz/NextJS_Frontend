@@ -108,7 +108,7 @@ export function PriceInput({
             currency.length <= 1 ? 'pl-7' : 'pl-9',
             error
               ? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-              : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+              : 'border-gray-300 focus:border-teal-500 focus:ring-teal-500'
           )}
         />
       </div>

@@ -26,6 +26,7 @@ export default function LoginPage() {
   const dispatch = useAppDispatch();
 
   const registered = searchParams.get('registered') === 'true';
+  const callbackUrl = searchParams.get('callbackUrl');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,7 +47,19 @@ export default function LoginPage() {
         refreshToken: response.refreshToken,
       }));
 
-      router.replace(ROLE_REDIRECTS[response.user.role] ?? '/bookings');
+      // Redirect: use callbackUrl if present and valid (for tourists), else role-based dashboard
+      const defaultRedirect = ROLE_REDIRECTS[response.user.role] ?? '/bookings';
+      let destination = defaultRedirect;
+      
+      if (response.user.role === 'TOURIST' && callbackUrl) {
+        // Validate callbackUrl is a relative path to prevent open-redirect attacks
+        const decoded = decodeURIComponent(callbackUrl);
+        if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+          destination = decoded;
+        }
+      }
+
+      router.replace(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {

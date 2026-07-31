@@ -25,7 +25,7 @@ const STEPS = [
 const EMPTY: CreatePackageInput = {
   name: '', description: '', category: 'ADVENTURE', duration: 1, basePrice: 0,
   highlights: [], bestSeason: '', maxCapacity: 10, images: [],
-  itinerary: [], inclusions: [], status: 'DRAFT',
+  itinerary: [], inclusions: [], status: 'DRAFT', featured: false,
 };
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export function CreatePackageForm() {
       ...(i === 0 ? { airportPickup } : {}),
       ...(i === form.itinerary.length - 1 ? { airportDropoff } : {}),
     }));
-    mutation.mutate({ ...form, itinerary }, { onSuccess: () => router.push('/packages') });
+    mutation.mutate({ ...form, itinerary }, { onSuccess: () => router.push('/admin/packages') });
   };
 
   const isLast = step === STEPS.length - 1;
@@ -295,6 +295,26 @@ export function CreatePackageForm() {
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
             </StyledSelect>
+          </div>
+
+          <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-amber-100 bg-amber-50">
+            <div className="flex items-center gap-2">
+              <span className="text-base">⭐</span>
+              <div>
+                <p className="text-xs font-semibold text-amber-800">Featured Package</p>
+                <p className="text-[11px] text-amber-500">Show this package in the featured section</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => set('featured', !form.featured)}
+              className={[
+                'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer',
+                form.featured ? 'bg-amber-500' : 'bg-gray-200',
+              ].join(' ')}
+            >
+              <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform', form.featured ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+            </button>
           </div>
         </StepCard>
       )}

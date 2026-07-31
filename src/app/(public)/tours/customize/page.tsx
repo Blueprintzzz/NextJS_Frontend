@@ -180,6 +180,27 @@ function getVehicleImage(v: VehicleApiItem): string | null {
   return first ?? null;
 }
 
+// ── Helpers for CustomBooking payload ────────────────────────────────────────
+
+function parseGroupSize(groupSize: string): number {
+  if (groupSize === '1')    return 1;
+  if (groupSize === '2')    return 2;
+  if (groupSize === '3–6')  return 4;
+  if (groupSize === '7–15') return 10;
+  if (groupSize === '16+')  return 16;
+  return 1;
+}
+
+function parseBudget(budget: string): number | null {
+  if (!budget || budget === 'Flexible') return null;
+  if (budget === 'Under $500')          return 400;
+  if (budget === '$500 – $1,000')       return 750;
+  if (budget === '$1,000 – $2,500')     return 1750;
+  if (budget === '$2,500 – $5,000')     return 3750;
+  if (budget === '$5,000+')             return 5000;
+  return null;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CustomizeTourPage() {
@@ -331,21 +352,62 @@ export default function CustomizeTourPage() {
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim()) { setError('Please fill in your name and email.'); setStep(1); return; }
     if (!email.includes('@')) { setError('Please enter a valid email address.'); setStep(1); return; }
+
+    // Check auth token — read from localStorage the same way the API layer does
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('tfx_auth') : null;
+    const accessToken = raw ? (JSON.parse(raw) as { accessToken?: string }).accessToken : null;
+    if (!accessToken) {
+      setError('Please log in to submit your custom tour request.');
+      window.location.href = `/login?redirect=${encodeURIComponent('/tours/customize')}`;
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
-    const message = buildMessage({
-      tourTypes, duration, groupSize, budget, startDate,
-      destinations: attractions.filter(a => destinations.includes(a.id)).map(a => a.name),
-      extraDestinations: extraDestinations.map(d => d.name), specialRequests,
-      selectedVehicleName: vehicles.find((v) => v.id === selectedVehicleId)
-        ? getVehicleName(vehicles.find((v) => v.id === selectedVehicleId)!)
-        : null,
-    });
+
+    const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+    const payload = {
+      title: `Custom Tour Request – ${name.trim()}`,
+      description: buildMessage({
+        tourTypes,
+        duration,
+        groupSize,
+        budget,
+        startDate,
+        destinations: attractions.filter(a => destinations.includes(a.id)).map(a => a.name),
+        extraDestinations: extraDestinations.map(d => d.name),
+        specialRequests,
+        selectedVehicleName: selectedVehicle ? getVehicleName(selectedVehicle) : null,
+      }),
+      startDate: startDate
+        ? new Date(startDate).toISOString()
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      endDate: startDate
+        ? new Date(new Date(startDate).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      numberOfPeople: parseGroupSize(groupSize),
+      budget: parseBudget(budget),
+      pickupLocation: 'To be confirmed',
+      dropoffLocation: 'To be confirmed',
+      requestedVehicleType: (selectedVehicle
+        ? getVehicleType(selectedVehicle).toUpperCase()
+        : 'CAR') as 'CAR' | 'SUV' | 'VAN' | 'MINIBUS' | 'LUXURY',
+      requestedModelId: selectedVehicleId ?? undefined,
+      destinations: [
+        ...attractions.filter(a => destinations.includes(a.id)).map(a => a.name),
+        ...extraDestinations.map(d => d.name),
+      ],
+      requirements: specialRequests || undefined,
+    };
+
     try {
-      const res = await fetch(`${API_URL}/inquiries`, {
+      const res = await fetch(`${API_URL}/custom-bookings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), phone: phone.trim(), subject: 'Custom Tour Request', message, category: 'GENERAL' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

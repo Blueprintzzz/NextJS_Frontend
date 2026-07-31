@@ -77,4 +77,5 @@ export interface CreatePackageInput {
   itinerary: PackageItinerary[];
   inclusions: PackageInclusion[];
   status: PackageStatus;
+  featured: boolean;
 }

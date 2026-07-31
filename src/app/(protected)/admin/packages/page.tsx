@@ -1,137 +1,200 @@
 'use client';
 
+import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Pencil, Star, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Pencil, Clock, Users, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { PackageFilters, PackageCategoryBadge } from '@/features/package';
 import { usePackages } from '@/features/package';
-import { PackageAPI } from '@/features/package';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import type { PackageStatus, PackageCategory, PackageFilterParams } from '@/features/package';
+import { formatPrice } from '@/features/package';
+import type { PackageCategory, TourPackage } from '@/features/package';
 
-const CATEGORIES: (PackageCategory | 'ALL')[] = ['ALL', 'ADVENTURE', 'NATURE', 'ROMANTIC', 'WILDLIFE', 'FAMILY', 'CULTURAL', 'BEACH', 'LUXURY'];
+const DEFAULT_FILTERS = {
+  search: '',
+  category: undefined as PackageCategory | undefined,
+  minPrice: '',
+  maxPrice: '',
+  minDuration: '',
+  maxDuration: '',
+};
 
-export default function AdminPackagesPage() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [category, setCategory] = useState<PackageCategory | undefined>();
-  const [status, setStatus] = useState<PackageStatus | undefined>();
-  const { data, isLoading } = usePackages({ category, ...(status ? { status } : {}) } as Parameters<typeof usePackages>[0]);
+type Filters = typeof DEFAULT_FILTERS;
 
-  async function handleFeature(id: string) {
-    try {
-      await PackageAPI.featurePackage(id);
-      queryClient.invalidateQueries({ queryKey: ['packages'] });
-      toast.success('Featured status updated');
-    } catch { toast.error('Failed to update'); }
-  }
-
-  async function handleToggleStatus(id: string, current: PackageStatus) {
-    try {
-      if (current === 'ACTIVE') {
-        await PackageAPI.deactivatePackage(id);
-        toast.success('Package deactivated');
-      } else {
-        await PackageAPI.updatePackage(id, { status: 'ACTIVE' });
-        toast.success('Package activated');
-      }
-      queryClient.invalidateQueries({ queryKey: ['packages'] });
-    } catch { toast.error('Failed to update status'); }
-  }
-
+// ─── Admin package card with Edit button ─────────────────────────────────────
+function AdminPackageCard({ pkg }: { pkg: TourPackage }) {
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900">Tour Package Management</h1>
-
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map(c => (
-            <button
-              key={c}
-              onClick={() => setCategory(c === 'ALL' ? undefined : c as PackageCategory)}
-              className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-                (c === 'ALL' && !category) || category === c
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'border-gray-300 text-gray-600 hover:border-gray-600'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+    <Card className="overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+      {/* Image */}
+      <div className="relative h-48 bg-gray-100 flex-shrink-0">
+        {pkg.images[0] ? (
+          <Image
+            src={pkg.images[0]}
+            alt={pkg.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+            No image
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <PackageCategoryBadge category={pkg.category} />
         </div>
-        <select
-          value={status ?? ''}
-          onChange={e => setStatus((e.target.value as PackageStatus) || undefined)}
-          className="ml-auto px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        >
-          <option value="">All Statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="DRAFT">Draft</option>
-        </select>
+        {/* Status badge */}
+        <div className="absolute top-2 right-2">
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              pkg.status === 'ACTIVE'
+                ? 'bg-green-100 text-green-700'
+                : pkg.status === 'DRAFT'
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            {pkg.status}
+          </span>
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              {['Name', 'Category', 'Duration', 'Price', 'Status', 'Actions'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+      {/* Body */}
+      <CardContent className="p-4 space-y-2 flex flex-col flex-1">
+        <h3 className="font-semibold text-gray-900 line-clamp-1">{pkg.name}</h3>
+        <p className="text-sm text-gray-500 line-clamp-2 flex-1">{pkg.description}</p>
+
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {pkg.duration} days
+          </span>
+          <span className="flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            Max {pkg.maxCapacity}
+          </span>
+          {pkg.rating != null && (
+            <span className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              {pkg.rating.toFixed(1)}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-lg font-semibold text-gray-900">
+            {formatPrice(pkg.basePrice)}
+          </span>
+        </div>
+
+        {/* Edit button */}
+        <Link href={`/admin/packages/${pkg.id}/edit`} className="block pt-1">
+          <Button variant="outline" size="sm" className="w-full gap-1.5">
+            <Pencil className="w-3.5 h-3.5" />
+            Edit
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function PackagesPage() {
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, isError } = usePackages({
+    search: filters.search || undefined,
+    category: filters.category,
+    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+    minDuration: filters.minDuration ? Number(filters.minDuration) : undefined,
+    maxDuration: filters.maxDuration ? Number(filters.maxDuration) : undefined,
+    page,
+    limit: 12,
+  });
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tour Package Management</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Manage, edit, and control package visibility.</p>
+        </div>
+        <Link href="/admin/packages/create">
+          <Button>+ New Package</Button>
+        </Link>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Filters sidebar */}
+        <aside className="w-full md:w-56 flex-shrink-0">
+          <PackageFilters
+            value={filters}
+            onChange={(f) => { setFilters({ ...DEFAULT_FILTERS, ...f }); setPage(1); }}
+          />
+        </aside>
+
+        {/* Grid */}
+        <div className="flex-1 space-y-4">
+          {isError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
+              Failed to load packages.
+            </p>
+          )}
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-72 rounded-lg bg-gray-100 animate-pulse" />
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>{Array.from({ length: 6 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td>
-                  ))}</tr>
-                ))
-              : data.data.length === 0
-              ? <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No packages found.</td></tr>
-              : data.data.map(pkg => (
-                  <tr key={pkg.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">{pkg.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{pkg.category}</td>
-                    <td className="px-4 py-3 text-gray-600">{pkg.duration}d</td>
-                    <td className="px-4 py-3 text-gray-700">${pkg.basePrice.toLocaleString()}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        pkg.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                        pkg.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>{pkg.status}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => router.push(`/packages/${pkg.id}/edit`)}
-                          className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleFeature(pkg.id)}
-                          className="p-1.5 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded"
-                          title="Toggle Featured"
-                        >
-                          <Star className={`w-4 h-4 ${pkg.rating ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(pkg.id, pkg.status)}
-                          className={`p-1.5 rounded ${pkg.status === 'ACTIVE' ? 'text-green-500 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                          title={pkg.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                        >
-                          {pkg.status === 'ACTIVE' ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-            }
-          </tbody>
-        </table>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500">{data.total} packages found</p>
+
+              {data.data.length === 0 ? (
+                <p className="text-center text-gray-400 py-16">No packages match your filters.</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {data.data.map((pkg) => (
+                    <AdminPackageCard key={pkg.id} pkg={pkg} />
+                  ))}
+                </div>
+              )}
+
+              {data.pages > 1 && (
+                <div className="flex items-center justify-between text-sm pt-2">
+                  <span className="text-gray-500">
+                    Page {data.page} of {data.pages}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page === 1}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= data.pages}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

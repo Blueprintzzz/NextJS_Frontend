@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ALL_CATEGORIES, CATEGORY_LABELS } from '../utils/package.utils';
@@ -21,6 +21,24 @@ interface Props {
 }
 
 export function PackageFilters({ value, onChange }: Props) {
+  // Local search state — debounced before propagating to parent
+  const [localSearch, setLocalSearch] = useState(value.search);
+
+  // Sync when parent resets filters (e.g. "Clear Filters" button)
+  useEffect(() => {
+    setLocalSearch(value.search);
+  }, [value.search]);
+
+  // Debounce: wait 400 ms after the user stops typing before firing onChange
+  useEffect(() => {
+    if (localSearch === value.search) return;
+    const id = setTimeout(() => {
+      onChange({ ...value, search: localSearch });
+    }, 400);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
+
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) => onChange({ ...value, [k]: v });
 
   return (
@@ -29,8 +47,8 @@ export function PackageFilters({ value, onChange }: Props) {
         <label className="text-xs font-medium text-gray-600 block mb-1">Search</label>
         <Input
           placeholder="Search packages..."
-          value={value.search}
-          onChange={(e) => set('search', e.target.value)}
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
         />
       </div>
 

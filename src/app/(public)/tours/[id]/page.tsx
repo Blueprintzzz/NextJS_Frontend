@@ -254,7 +254,7 @@ export default function TourDetailPage() {
                 </div>
 
                 <Link
-                  href="/bookings/create"
+                  href={`/login?callbackUrl=${encodeURIComponent(`/bookings/create?packageId=${pkg.id}&guests=${guests}`)}`}
                   className="block w-full text-center py-3 px-6 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors"
                 >
                   Book Now

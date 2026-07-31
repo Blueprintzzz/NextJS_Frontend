@@ -9,14 +9,17 @@ export default function EditPackagePage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/packages">
+    <div className="p-6 space-y-4">
+      <div className="flex items-center gap-3 mb-4">
+        <Link href="/admin/packages">
           <Button variant="ghost" size="sm">← Back</Button>
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">Edit Package</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Package</h1>
+          <p className="text-sm text-gray-400">Update tour package details step by step.</p>
+        </div>
       </div>
-      <EditPackageForm packageId={id} />
+      <EditPackageForm packageId={id} backHref="/admin/packages" />
     </div>
   );
 }

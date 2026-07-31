@@ -28,7 +28,7 @@ function getAuthHeaders(): Record<string, string> {
 // Backend returns itineraries[] and inclusions[].inclusion — map to frontend shape
 function mapPackage(data: Record<string, unknown>): TourPackage {
   const pkg = { ...data } as TourPackage & {
-    itineraries?: { day: number; title: string; description: string; attractions?: string }[];
+    itineraries?: { day: number; title: string; description: string; destinations?: string; airportPickup?: boolean; airportDropoff?: boolean }[];
     inclusions?: { type: string; inclusion?: string; description?: string }[];
   };
 
@@ -37,8 +37,10 @@ function mapPackage(data: Record<string, unknown>): TourPackage {
       day: item.day,
       title: item.title,
       description: item.description,
-      attractions: item.attractions
-        ? item.attractions.split(', ').map((label, i) => ({
+      airportPickup:  item.airportPickup  ?? false,
+      airportDropoff: item.airportDropoff ?? false,
+      attractions: item.destinations
+        ? item.destinations.split(', ').filter(Boolean).map((label, i) => ({
             id: String(i),
             label,
             tag: 'destination' as const,
@@ -149,7 +151,7 @@ export const PackageAPI = {
   },
 
   async create(input: CreatePackageInput): Promise<TourPackage> {
-    const body = {
+    const body: Record<string, unknown> = {
       name:        input.name,
       description: input.description,
       category:    input.category,
@@ -160,7 +162,9 @@ export const PackageAPI = {
       maxCapacity: input.maxCapacity,
       images:      input.images,
       status:      input.status,
+      featured:    input.featured ?? false,
     };
+    if (input.destinationId) body.destinationId = input.destinationId;
 
     const res = await fetch(`${API_URL}/packages`, {
       method: 'POST',
@@ -179,10 +183,12 @@ export const PackageAPI = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          day:         day.day,
-          title:       day.title,
-          description: day.description,
-          attractions: day.attractions.map((a) => a.label).join(', '),
+          day:            day.day,
+          title:          day.title,
+          description:    day.description,
+          destinations:   day.attractions.map((a) => a.label).join(', '),
+          airportPickup:  day.airportPickup  ?? false,
+          airportDropoff: day.airportDropoff ?? false,
         }),
       });
     }
@@ -268,16 +274,18 @@ export const PackageAPI = {
 
   async addItinerary(
     packageId: string,
-    day: { day: number; title: string; description: string; attractions: { label: string }[] },
+    day: { day: number; title: string; description: string; attractions: { label: string }[]; airportPickup?: boolean; airportDropoff?: boolean },
   ): Promise<void> {
     await fetch(`${API_URL}/packages/${packageId}/itinerary`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
-        day:         day.day,
-        title:       day.title,
-        description: day.description,
-        attractions: day.attractions.map((a) => a.label).join(', '),
+        day:            day.day,
+        title:          day.title,
+        description:    day.description,
+        destinations:   day.attractions.map((a) => a.label).join(', '),
+        airportPickup:  day.airportPickup  ?? false,
+        airportDropoff: day.airportDropoff ?? false,
       }),
     });
   },
@@ -294,11 +302,12 @@ export const PackageAPI = {
   async updateItinerary(
     packageId: string,
     dayNumber: number,
-    data: Partial<{ title: string; description: string; attractions: { label: string }[] }>,
+    data: Partial<{ title: string; description: string; attractions: { label: string }[]; airportPickup: boolean; airportDropoff: boolean }>,
   ): Promise<void> {
     const body: Record<string, unknown> = { ...data };
     if (data.attractions) {
-      body.attractions = data.attractions.map((a) => a.label).join(', ');
+      body.destinations = data.attractions.map((a) => a.label).join(', ');
+      delete body.attractions;
     }
     await fetch(`${API_URL}/packages/${packageId}/itinerary/${dayNumber}`, {
       method: 'PATCH',

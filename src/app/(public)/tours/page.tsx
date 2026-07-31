@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, Package } from 'lucide-react';
@@ -29,6 +29,7 @@ const DURATION_OPTIONS = [
 
 export default function ToursPage() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PackageCategory | ''>('');
   const [minDuration, setMinDuration] = useState<number | undefined>();
   const [maxDuration, setMaxDuration] = useState<number | undefined>();
@@ -36,8 +37,14 @@ export default function ToursPage() {
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Debounce hero search input — wait 400 ms after user stops typing
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(id);
+  }, [search]);
+
   const filters = {
-    ...(search && { search }),
+    ...(debouncedSearch && { search: debouncedSearch }),
     ...(selectedCategory && { category: selectedCategory }),
     ...(minDuration !== undefined && { minDuration }),
     ...(maxDuration !== undefined && { maxDuration }),
@@ -53,6 +60,7 @@ export default function ToursPage() {
 
   const clearFilters = () => {
     setSearch('');
+    setDebouncedSearch('');
     setSelectedCategory('');
     setMinDuration(undefined);
     setMaxDuration(undefined);
