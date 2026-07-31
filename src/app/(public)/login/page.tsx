@@ -46,7 +46,12 @@ export default function LoginPage() {
         refreshToken: response.refreshToken,
       }));
 
-      router.replace(ROLE_REDIRECTS[response.user.role] ?? '/bookings');
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo && response.user.role === 'TOURIST') {
+        router.replace(redirectTo);
+      } else {
+        router.replace(ROLE_REDIRECTS[response.user.role] ?? '/bookings');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
