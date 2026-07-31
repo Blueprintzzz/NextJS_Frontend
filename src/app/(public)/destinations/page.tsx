@@ -43,11 +43,11 @@ export default function DestinationsPage() {
     attractionCategory !== 'ALL' ? { category: attractionCategory } : undefined
   );
 
-  const displayAttractions = (attractions?.data ?? []).slice(0, 20);
+  const displayAttractions = (attractions ?? []).slice(0, 20);
 
   const mapMarkers = useMemo(
     () =>
-      (allDestData?.data ?? [])
+      (allDestData ?? [])
         .filter((d) => d.latitude && d.longitude)
         .map((d) => ({
           id: d.id,
@@ -57,7 +57,7 @@ export default function DestinationsPage() {
           color: CATEGORY_COLORS[d.category] ?? '#0d9488',
           category: d.category,
         })),
-    [allDestData?.data],
+    [allDestData],
   );
 
   return (
@@ -111,7 +111,7 @@ export default function DestinationsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500 whitespace-nowrap">
-              {loadingDistricts ? 'Loading...' : `${districts?.data?.length ?? 0} destinations`}
+              {loadingDistricts ? 'Loading...' : `${districts?.length ?? 0} destinations`}
             </span>
             <div className="flex border border-gray-200 rounded-lg overflow-hidden">
               <button
@@ -158,7 +158,7 @@ export default function DestinationsPage() {
                 <div key={i} className="h-72 rounded-2xl bg-gray-200 animate-pulse" />
               ))}
             </div>
-          ) : (districts?.data?.length ?? 0) === 0 ? (
+          ) : (districts?.length ?? 0) === 0 ? (
             <div className="text-center py-20">
               <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700">No destinations found</h3>
@@ -172,7 +172,7 @@ export default function DestinationsPage() {
                   : 'flex flex-col gap-6'
               }
             >
-              {(districts?.data ?? []).map((district) =>
+              {(districts ?? []).map((district) =>
                 viewMode === 'grid' ? (
                   <DestinationCard key={district.id} district={district} />
                 ) : (
