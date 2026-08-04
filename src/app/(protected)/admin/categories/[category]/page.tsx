@@ -21,7 +21,8 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
   const pkgCategory = categoryParam.toUpperCase() as PackageCategory;
   const attractionCat = TOUR_TO_ATTRACTION[categoryParam] as AttractionCategory | undefined;
 
-  const { data: packages, isLoading: pkgsLoading } = usePackagesByCategory(pkgCategory);
+  const { data: packagesData, isLoading: pkgsLoading } = usePackagesByCategory(pkgCategory);
+  const packages = packagesData?.data ?? [];
 
   return (
     <div className="p-6 space-y-10">
