@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,7 @@ const CATEGORIES = [
 const EMPTY: CreateExperienceInput = {
   name: '', description: '', category: 'ADVENTURE',
   price: 0, duration: '', image: '', images: [],
-  location: '', districtId: '', featured: false, status: 'ACTIVE',
+  location: '', destinationId: '', featured: false, status: 'ACTIVE',
   capacity: undefined, availability: '',
 };
 
@@ -89,6 +89,81 @@ function validateStep(step: number, form: CreateExperienceInput): StepErrors {
   return errors;
 }
 
+// ─── District searchable combobox ────────────────────────────────────────────
+function DistrictSearch({ districts, value, onChange }: {
+  districts: District[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [query, setQuery]   = useState('');
+  const [open, setOpen]     = useState(false);
+  const ref                 = useRef<HTMLDivElement>(null);
+
+  const selected = districts.find(d => d.id === value);
+  const filtered = query.trim()
+    ? districts.filter(d => d.name.toLowerCase().includes(query.toLowerCase()))
+    : districts;
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div
+        className="w-full flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 cursor-pointer focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span className={selected ? 'text-gray-900' : 'text-gray-400'}>
+          {selected ? selected.name : '— None —'}
+        </span>
+        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+        </svg>
+      </div>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          <div className="p-2 border-b border-gray-100">
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search district…"
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+          <ul className="max-h-52 overflow-y-auto py-1">
+            <li
+              className="px-3 py-2 text-sm text-gray-400 hover:bg-gray-50 cursor-pointer"
+              onClick={() => { onChange(''); setQuery(''); setOpen(false); }}
+            >
+              — None —
+            </li>
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-gray-400">No results</li>
+            ) : filtered.map(d => (
+              <li
+                key={d.id}
+                onClick={() => { onChange(d.id); setQuery(''); setOpen(false); }}
+                className={['px-3 py-2 text-sm cursor-pointer transition-colors', d.id === value ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-800 hover:bg-gray-50'].join(' ')}
+              >
+                {d.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences' }: Props) {
   const router  = useRouter();
@@ -108,9 +183,12 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
   const [districts, setDistricts] = useState<District[]>([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/districts`)
-      .then((r) => r.ok ? r.json() : [])
-      .then((d) => setDistricts(Array.isArray(d) ? d : (d?.data ?? [])))
+    fetch(`${API_URL}/destinations?limit=200`)
+      .then((r) => r.ok ? r.json() : { data: [] })
+      .then((d) => {
+        const list: { id: string; name: string }[] = Array.isArray(d) ? d : (d?.data ?? []);
+        setDistricts(list.map((item) => ({ id: item.id, name: item.name })).sort((a, b) => a.name.localeCompare(b.name)));
+      })
       .catch(() => {});
   }, []);
 
@@ -125,7 +203,7 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
         image:        existing.image ?? '',
         images:       Array.isArray(existing.images) ? existing.images as string[] : [],
         location:     existing.location ?? '',
-        districtId:   existing.districtId ?? '',
+        destinationId:   existing.destinationId ?? '',
         featured:     existing.featured,
         status:       existing.status,
         capacity:     existing.capacity ?? undefined,
@@ -141,14 +219,18 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
     setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = () => {
-    const payload = {
-      ...form,
+    const payload: Omit<CreateExperienceInput, 'capacity' | 'availability' | 'destinationId'> & { destinationId?: string } = {
+      name:         form.name,
+      description:  form.description,
+      category:     form.category,
       price:        Number(form.price),
+      duration:     form.duration,
       images:       form.images?.filter(Boolean) ?? [],
-      districtId:   form.districtId || undefined,
-      image:        form.image      || undefined,
-      location:     form.location   || undefined,
-      availability: form.availability || undefined,
+      featured:     form.featured,
+      status:       form.status,
+      ...(form.image        && { image: form.image }),
+      ...(form.location     && { location: form.location }),
+      ...(form.destinationId && { destinationId: form.destinationId }),
     };
     if (isEdit) {
       updateMutation.mutate({ id: experienceId!, data: payload }, { onSuccess: () => router.push(effectiveRedirect) });
@@ -254,17 +336,12 @@ export function ExperienceForm({ experienceId, redirectTo = '/admin/experiences'
               />
             </div>
             <div>
-              <FieldLabel htmlFor="exp-district">District</FieldLabel>
-              <StyledSelect
-                id="exp-district"
-                value={form.districtId ?? ''}
-                onChange={(e) => set('districtId', e.target.value)}
-              >
-                <option value="">— None —</option>
-                {districts.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </StyledSelect>
+              <FieldLabel htmlFor="exp-district">Destination</FieldLabel>
+              <DistrictSearch
+                districts={districts}
+                value={form.destinationId ?? ''}
+                onChange={(id) => set('destinationId', id)}
+              />
             </div>
           </div>
         </StepCard>

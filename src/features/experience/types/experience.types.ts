@@ -8,7 +8,7 @@ export interface Experience {
   image?: string | null;
   images: string[];
   location?: string | null;
-  districtId?: string | null;
+  destinationId?: string | null;
   featured: boolean;
   status: string;
   capacity?: number | null;

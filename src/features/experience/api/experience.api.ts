@@ -104,7 +104,7 @@ export interface CreateExperienceInput {
   image?: string;
   images?: string[];
   location?: string;
-  districtId?: string;
+  destinationId?: string;
   featured?: boolean;
   status?: string;
   capacity?: number;
