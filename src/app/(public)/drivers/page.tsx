@@ -24,7 +24,7 @@ export default function DriversPage() {
   const { data: vehicles, isLoading } = useVehicles(vehicleType ? { type: vehicleType } : undefined);
 
   const filtered = vehicles.filter((v) =>
-    !search || v.name.toLowerCase().includes(search.toLowerCase())
+    !search || (v.name ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
