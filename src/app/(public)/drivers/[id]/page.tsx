@@ -68,7 +68,7 @@ export default function DriverProfilePage({ params }: { params: Promise<{ id: st
         {/* Profile Header */}
         <div className="flex flex-col sm:flex-row gap-6 items-start mb-10">
           <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-3xl flex-shrink-0">
-            {vehicle.name.charAt(0)}
+            {vehicle.name?.charAt(0) ?? '?'}
           </div>
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{vehicle.name}</h1>
