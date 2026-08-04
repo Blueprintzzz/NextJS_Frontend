@@ -74,7 +74,7 @@ export default function PublicVehicleDetailPage({ params }: { params: Promise<{ 
               <div className="relative h-80 md:h-[420px] rounded-2xl overflow-hidden bg-gray-100 shadow-md">
                 <Image
                   src={images[imgIdx]}
-                  alt={vehicle.name}
+                  alt={vehicle.name ?? 'Vehicle'}
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
