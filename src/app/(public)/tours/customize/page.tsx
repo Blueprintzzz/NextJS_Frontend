@@ -165,17 +165,37 @@ function Stepper({ current, labels, onStepClick }: { current: number; labels: st
 
 type VehicleApiItem = {
   id: string;
-  name?: string; title?: string;
-  type?: string; category?: string; vehicleType?: string;
-  capacity?: number; seats?: number;
-  pricePerDay?: number; price?: number;
+  vehicleModelId?: string;
+  vehicleModelName?: string;
+  type?: string;
+  capacity?: number;
+  pricePerDay?: number;
   images?: string[];
+  registrationNumber?: string;
+  description?: string;
+  features?: string[];
+  status?: string;
 };
 
-function getVehicleName(v: VehicleApiItem): string { return v.name ?? v.title ?? 'Unnamed Vehicle'; }
-function getVehicleType(v: VehicleApiItem): string { return v.type ?? v.category ?? v.vehicleType ?? ''; }
-function getVehicleCapacity(v: VehicleApiItem): number | null { return v.capacity ?? v.seats ?? null; }
-function getVehiclePrice(v: VehicleApiItem): number | null { return v.pricePerDay ?? v.price ?? null; }
+type VehicleModel = {
+  id: string;
+  name: string;
+  type: string;
+  icon?: string;
+  image?: string;
+};
+
+const DEFAULT_ICONS: Record<string, string> = {
+  CAR:     '🚗',
+  SUV:     '🚙',
+  VAN:     '🚐',
+  MINIBUS: '🚌',
+  LUXURY:  '🏎️',
+};
+
+function getVehicleName(v: VehicleApiItem): string { return v.vehicleModelName ?? 'Unknown Model'; }
+function getVehicleCapacity(v: VehicleApiItem): number | null { return v.capacity ?? null; }
+function getVehiclePrice(v: VehicleApiItem): number | null { return v.pricePerDay ?? null; }
 function getVehicleImage(v: VehicleApiItem): string | null {
   const first = v.images?.find((url) => !!url && url.trim() !== '');
   return first ?? null;
@@ -252,10 +272,11 @@ export default function CustomizeTourPage() {
   const [error,      setError]      = useState<string | null>(null);
 
   // ── Vehicle state ──────────────────────────────────────────────────────────
-  const [vehicles,         setVehicles]         = useState<VehicleApiItem[]>([]);
-  const [vehiclesLoading,  setVehiclesLoading]  = useState(false);
-  const [vehiclesError,    setVehiclesError]    = useState<string | null>(null);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [selectedVehicleId,   setSelectedVehicleId]   = useState<string | null>(null);
+  const [vehicleModels,       setVehicleModels]       = useState<VehicleModel[]>([]);
+  const [selectedModelId,     setSelectedModelId]     = useState<string | null>(null);
+  const [modelVehicles,       setModelVehicles]       = useState<VehicleApiItem[]>([]);
+  const [modelVehiclesLoading, setModelVehiclesLoading] = useState(false);
 
   const toggleTourType = (value: string) =>
     setTourTypes((prev) => prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]);
@@ -325,9 +346,6 @@ export default function CustomizeTourPage() {
     return () => { if (geoDebounceRef.current) clearTimeout(geoDebounceRef.current); };
   }, [districtSearch, extraDestinations, attractions]);
 
-  // ── Fetch vehicles when step 6 is reached (cached after first load) ────────
-  const vehiclesFetchedRef = useRef(false);
-
   // ── Build map markers from selected attractions + extras ─────────────────────
   const allMarkers = useMemo<MapboxMarker[]>(() => {
     const selected: MapboxMarker[] = attractions
@@ -338,32 +356,32 @@ export default function CustomizeTourPage() {
     }));
     return [...selected, ...extras];
   }, [destinations, extraDestinations, attractions]);
+  // ── Fetch vehicle models when step 6 is reached ──────────────────────────
   useEffect(() => {
-    if (step !== 6 || vehiclesFetchedRef.current) return;
-    vehiclesFetchedRef.current = true;
-    let cancelled = false;
-    setVehiclesLoading(true);
-    setVehiclesError(null);
-    fetch(`${API_URL}/vehicles`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
-        const data = await res.json();
-        const list: VehicleApiItem[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)  ? data.data
-          : Array.isArray(data?.items) ? data.items
-          : [];
-        if (!cancelled) setVehicles(list);
+    if (step !== 6) return;
+    fetch(`${API_URL}/vehicle-models`)
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : data?.data ?? [];
+        setVehicleModels(list);
       })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          vehiclesFetchedRef.current = false; // allow retry on next visit to step 6
-          setVehiclesError(err instanceof Error ? err.message : 'Failed to load vehicles.');
-        }
-      })
-      .finally(() => { if (!cancelled) setVehiclesLoading(false); });
-    return () => { cancelled = true; };
+      .catch(() => setVehicleModels([]));
   }, [step]);
+
+  // ── Fetch vehicles for selected model ────────────────────────────────────
+  useEffect(() => {
+    if (!selectedModelId) { setModelVehicles([]); return; }
+    setModelVehiclesLoading(true);
+    setSelectedVehicleId(null);
+    fetch(`${API_URL}/vehicles?vehicleModelId=${selectedModelId}&limit=20`)
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : data?.data ?? [];
+        setModelVehicles(list);
+      })
+      .catch(() => setModelVehicles([]))
+      .finally(() => setModelVehiclesLoading(false));
+  }, [selectedModelId]);
 
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim()) { setError('Please fill in your name and email.'); setStep(1); return; }
@@ -381,7 +399,7 @@ export default function CustomizeTourPage() {
     setError(null);
     setSubmitting(true);
 
-    const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+    const selectedVehicle = modelVehicles.find(v => v.id === selectedVehicleId);
     const payload = {
       title: `Custom Tour Request – ${name.trim()}`,
       description: buildMessage({
@@ -405,10 +423,11 @@ export default function CustomizeTourPage() {
       budget: parseBudget(budget),
       pickupLocation: 'To be confirmed',
       dropoffLocation: 'To be confirmed',
-      requestedVehicleType: (selectedVehicle
-        ? getVehicleType(selectedVehicle).toUpperCase()
-        : 'CAR') as 'CAR' | 'SUV' | 'VAN' | 'MINIBUS' | 'LUXURY',
-      requestedModelId: selectedVehicleId ?? undefined,
+      requestedVehicleType: (() => {
+        const model = vehicleModels.find(m => m.id === selectedModelId);
+        return (model?.type ?? 'CAR') as 'CAR' | 'SUV' | 'VAN' | 'MINIBUS' | 'LUXURY';
+      })(),
+      requestedModelId: selectedModelId ?? undefined,
       destinations: [
         ...attractions.filter(a => destinations.includes(a.id)).map(a => a.name),
         ...extraDestinations.map(d => d.name),
@@ -737,80 +756,167 @@ export default function CustomizeTourPage() {
             {/* ── Step 6: Vehicle ── */}
             {step === 6 && (
               <section>
-                <SectionHeader number="6" title="Choose a Vehicle" subtitle="Pick the vehicle you'd like for this trip (optional)." />
+                <SectionHeader
+                  number="6"
+                  title="Choose a Vehicle"
+                  subtitle="First select a vehicle model, then pick a specific vehicle."
+                />
 
-                {vehiclesLoading && (
-                  <div className="flex items-center justify-center py-10 text-sm text-gray-400">
-                    Loading vehicles…
+                {/* ── Level 1: Model Grid ── */}
+                {!selectedModelId && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">Select a vehicle model</p>
+
+                    {vehicleModels.length === 0 ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {vehicleModels.map((model) => (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => setSelectedModelId(model.id)}
+                            className="rounded-xl border-2 border-gray-200 bg-white hover:border-teal-400 hover:bg-teal-50 transition-all overflow-hidden text-left"
+                          >
+                            <div className="h-24 bg-gray-50 flex items-center justify-center overflow-hidden">
+                              {model.image ? (
+                                <div className="relative w-full h-24">
+                                  <img
+                                    src={model.image}
+                                    alt={model.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<span style="font-size:2.5rem;display:flex;align-items:center;justify-content:center;height:100%">${
+                                          model.icon ?? (
+                                            model.type === 'CAR'     ? '🚗' :
+                                            model.type === 'SUV'     ? '🚙' :
+                                            model.type === 'VAN'     ? '🚐' :
+                                            model.type === 'MINIBUS' ? '🚌' : '🏎️'
+                                          )
+                                        }</span>`;
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <span className="text-4xl">{model.icon ?? DEFAULT_ICONS[model.type] ?? '🚗'}</span>
+                              )}
+                            </div>
+                            <div className="p-2.5">
+                              <p className="text-xs font-bold text-gray-900 truncate">{model.name}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5">{model.type}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-400 mt-4">
+                      This step is optional — skip to submit without selecting a vehicle.
+                    </p>
                   </div>
                 )}
 
-                {vehiclesError && !vehiclesLoading && (
-                  <div className="flex items-start gap-2 p-4 rounded-xl bg-red-50 border border-red-100 mt-4">
-                    <span className="text-red-500 text-sm flex-shrink-0">⚠️</span>
-                    <p className="text-sm text-red-600">Couldn&apos;t load vehicles: {vehiclesError}</p>
-                  </div>
-                )}
+                {/* ── Level 2: Vehicles in selected model ── */}
+                {selectedModelId && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedModelId(null); setSelectedVehicleId(null); setModelVehicles([]); }}
+                      className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 font-medium mb-4"
+                    >
+                      ← Back to models
+                    </button>
 
-                {!vehiclesLoading && !vehiclesError && vehicles.length === 0 && (
-                  <p className="text-sm text-gray-400 py-6 text-center">
-                    No vehicles available right now — you can skip this step.
-                  </p>
-                )}
-
-                {!vehiclesLoading && !vehiclesError && vehicles.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    {vehicles.map((v) => {
-                      const active    = selectedVehicleId === v.id;
-                      const img       = getVehicleImage(v);
-                      const price     = getVehiclePrice(v);
-                      const capacity  = getVehicleCapacity(v);
-                      const vtype     = getVehicleType(v);
-                      return (
-                        <div
-                          key={v.id}
-                          onClick={() => setSelectedVehicleId((prev) => prev === v.id ? null : v.id)}
-                          className={[
-                            'rounded-2xl border-2 overflow-hidden transition-all cursor-pointer',
-                            active ? 'border-teal-500 bg-teal-50' : 'border-gray-200 bg-white hover:border-teal-300',
-                          ].join(' ')}
-                        >
-                          {img && (
-                            <div className="relative w-full h-32 bg-gray-100">
-                              <img src={img} alt={getVehicleName(v)} className="w-full h-full object-cover" />
-                            </div>
-                          )}
-                          <div className="p-4">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="font-bold text-sm text-gray-900">{getVehicleName(v)}</p>
-                                {vtype && <p className="text-xs text-gray-400 mt-0.5">{vtype}</p>}
-                              </div>
-                              {active && <span className="text-teal-600 text-lg flex-shrink-0">✓</span>}
-                            </div>
-                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                              {capacity !== null && <span>👥 {capacity} seats</span>}
-                              {price !== null && <span>💰 ${price}/day</span>}
-                            </div>
-                            <a
-                              href={`/vehicles/${v.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-block mt-3 text-xs font-semibold text-teal-600 hover:text-teal-700"
-                            >
-                              View details →
-                            </a>
+                    {(() => {
+                      const model = vehicleModels.find(m => m.id === selectedModelId);
+                      return model ? (
+                        <div className="flex items-center gap-3 mb-4 p-3 bg-teal-50 rounded-xl border border-teal-100">
+                          <span className="text-2xl">{model.icon ?? DEFAULT_ICONS[model.type] ?? '🚗'}</span>
+                          <div>
+                            <p className="text-sm font-bold text-teal-800">{model.name}</p>
+                            <p className="text-xs text-teal-600">{model.type}</p>
                           </div>
                         </div>
-                      );
-                    })}
+                      ) : null;
+                    })()}
+
+                    {modelVehiclesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : modelVehicles.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-sm text-gray-500">No vehicles available for this model right now.</p>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedModelId(null)}
+                          className="mt-3 text-sm text-teal-600 hover:text-teal-700 font-medium"
+                        >
+                          Choose a different model
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {modelVehicles.map((v) => {
+                          const active   = selectedVehicleId === v.id;
+                          const img      = getVehicleImage(v);
+                          const price    = getVehiclePrice(v);
+                          const capacity = getVehicleCapacity(v);
+                          return (
+                            <div
+                              key={v.id}
+                              onClick={() => setSelectedVehicleId(prev => prev === v.id ? null : v.id)}
+                              className={[
+                                'rounded-2xl border-2 overflow-hidden transition-all cursor-pointer',
+                                active ? 'border-teal-500 bg-teal-50' : 'border-gray-200 bg-white hover:border-teal-300',
+                              ].join(' ')}
+                            >
+                              {img && (
+                                <div className="relative w-full h-32 bg-gray-100">
+                                  <img src={img} alt={v.vehicleModelName ?? 'Vehicle'} className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <p className="font-bold text-sm text-gray-900">{v.vehicleModelName ?? 'Vehicle'}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">{v.registrationNumber}</p>
+                                  </div>
+                                  {active && <span className="text-teal-600 text-lg flex-shrink-0">✓</span>}
+                                </div>
+                                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                  {capacity !== null && <span>👥 {capacity} seats</span>}
+                                  {price !== null && <span>💰 ${price}/day</span>}
+                                </div>
+                                {v.features && v.features.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {v.features.slice(0, 3).map((f, i) => (
+                                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">{f}</span>
+                                    ))}
+                                    {v.features.length > 3 && (
+                                      <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">+{v.features.length - 3}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-400 mt-4">
+                      This step is optional — you can submit without selecting a vehicle.
+                    </p>
                   </div>
                 )}
-
-                <p className="text-xs text-gray-400 mt-4">
-                  This step is optional — you can submit your request without selecting a vehicle and our team will recommend one.
-                </p>
               </section>
             )}
 
