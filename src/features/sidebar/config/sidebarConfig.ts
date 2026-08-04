@@ -91,6 +91,8 @@ export const adminGroup: NavGroup = {
     { label: 'Reviews',               href: '/admin/reviews',          icon: ShieldCheck },
     { label: 'Analytics',             href: '/admin/analytics',        icon: TrendingUp },
     { label: 'Categories',            href: '/admin/categories',       icon: LayoutGrid },
+    { label: 'Vehicles',               href: '/admin/vehicles',         icon: Car },
+    { label: 'Vehicle Models',           href: '/admin/vehicle-models',   icon: Car },
   ],
 };
 
