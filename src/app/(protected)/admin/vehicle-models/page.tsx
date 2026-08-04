@@ -17,10 +17,11 @@ const DEFAULT_ICONS: Record<string, string> = {
   CAR: '🚗', SUV: '🚙', VAN: '🚐', MINIBUS: '🚌', LUXURY: '🏎️',
 };
 
-function getAuthHeaders() {
+function getAuthHeaders(): Record<string, string> {
   const raw = localStorage.getItem('tfx_auth');
   if (!raw) return {};
   const { accessToken } = JSON.parse(raw);
+  if (!accessToken) return {};
   return { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
 }
 
