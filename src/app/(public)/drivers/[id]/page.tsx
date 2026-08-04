@@ -119,7 +119,7 @@ export default function DriverProfilePage({ params }: { params: Promise<{ id: st
               <div className="relative h-64 rounded-2xl overflow-hidden bg-gray-100 shadow-sm mb-4">
                 <Image
                   src={images[imgIdx]}
-                  alt={vehicle.name}
+                  alt={vehicle.name ?? 'Vehicle'}
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 66vw"
