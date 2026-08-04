@@ -119,7 +119,7 @@ export default function DriversPage() {
                     {vehicle.images[0] ? (
                       <Image
                         src={vehicle.images[0]}
-                        alt={vehicle.name}
+                        alt={vehicle.name ?? 'Vehicle'}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -138,11 +138,11 @@ export default function DriversPage() {
                     {/* Driver avatar + name row */}
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-sm flex-shrink-0">
-                        {vehicle.name.charAt(0)}
+                        {(vehicle.name ?? '?').charAt(0)}
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
-                          {vehicle.name}
+                          {vehicle.name ?? 'Unknown'}
                         </h3>
                         <p className="text-xs text-gray-500 flex items-center gap-1">
                           <MapPin className="w-3 h-3" /> Sri Lanka
