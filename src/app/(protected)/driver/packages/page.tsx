@@ -135,7 +135,7 @@ export default function DriverPackagesPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useMyPackages({
+  const { data, isLoading } = useMyPackages({
     page,
     limit: 12,
   });
@@ -165,7 +165,7 @@ export default function DriverPackagesPage() {
 
         {/* Grid */}
         <div className="flex-1 space-y-4">
-          {isError && (
+          {!isLoading && !data && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3">
               Failed to load packages.
             </p>
@@ -177,7 +177,7 @@ export default function DriverPackagesPage() {
                 <div key={i} className="h-72 rounded-lg bg-gray-100 animate-pulse" />
               ))}
             </div>
-          ) : (
+          ) : data ? (
             <>
               <p className="text-sm text-gray-500">{data.total} packages found</p>
 
@@ -217,7 +217,7 @@ export default function DriverPackagesPage() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
