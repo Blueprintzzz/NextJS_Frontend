@@ -50,10 +50,15 @@ export default function VehicleModelsPage() {
 
   async function loadModels() {
     setLoading(true);
-    const res = await fetch(`${API_URL}/vehicle-models`);
-    const data = await res.json();
-    setModels(Array.isArray(data) ? data : (data?.data ?? []));
-    setLoading(false);
+    try {
+      const res = await fetch(`${API_URL}/vehicle-models`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      setModels(Array.isArray(data) ? data : (data?.data ?? []));
+    } catch {
+      setModels([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function openCreate() {

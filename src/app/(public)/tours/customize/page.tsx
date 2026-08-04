@@ -267,6 +267,8 @@ export default function CustomizeTourPage() {
   const [geoSearching,     setGeoSearching]     = useState(false);
   const geoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [airportPickup,  setAirportPickup]  = useState(false);
+  const [airportDropoff, setAirportDropoff] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted,  setSubmitted]  = useState(false);
   const [error,      setError]      = useState<string | null>(null);
@@ -421,8 +423,8 @@ export default function CustomizeTourPage() {
         : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       numberOfPeople: parseGroupSize(groupSize),
       budget: parseBudget(budget),
-      pickupLocation: 'To be confirmed',
-      dropoffLocation: 'To be confirmed',
+      pickupLocation: airportPickup ? 'Airport Pickup' : 'To be confirmed',
+      dropoffLocation: airportDropoff ? 'Airport Drop-off' : 'To be confirmed',
       requestedVehicleType: (() => {
         const model = vehicleModels.find(m => m.id === selectedModelId);
         return (model?.type ?? 'CAR') as 'CAR' | 'SUV' | 'VAN' | 'MINIBUS' | 'LUXURY';
@@ -720,6 +722,42 @@ export default function CustomizeTourPage() {
                         </div>
                       )}
                     </div>
+                    {/* Airport pickup / dropoff */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-blue-100 bg-blue-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">✈️</span>
+                          <div>
+                            <p className="text-xs font-semibold text-blue-800">Airport Pickup</p>
+                            <p className="text-[11px] text-blue-500">Pick up from airport on arrival</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAirportPickup(v => !v)}
+                          className={['relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer', airportPickup ? 'bg-blue-500' : 'bg-gray-200'].join(' ')}
+                        >
+                          <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform', airportPickup ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-purple-100 bg-purple-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🛫</span>
+                          <div>
+                            <p className="text-xs font-semibold text-purple-800">Airport Drop-off</p>
+                            <p className="text-[11px] text-purple-500">Drop off at airport on departure</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAirportDropoff(v => !v)}
+                          className={['relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer', airportDropoff ? 'bg-purple-500' : 'bg-gray-200'].join(' ')}
+                        >
+                          <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform', airportDropoff ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+                        </button>
+                      </div>
+                    </div>
+
                     <div>
                       <FieldLabel>Special Requests or Notes</FieldLabel>
                       <textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)} rows={4}
