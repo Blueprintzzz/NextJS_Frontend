@@ -22,7 +22,7 @@ export function VehicleCard({ vehicle, onSelect, totalDays }: Props) {
         {vehicle.images[0] ? (
           <Image
             src={vehicle.images[0]}
-            alt={vehicle.name}
+            alt={vehicle.name ?? ''}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
