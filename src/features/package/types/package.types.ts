@@ -78,4 +78,5 @@ export interface CreatePackageInput {
   inclusions: PackageInclusion[];
   status: PackageStatus;
   featured: boolean;
+  destinationId?: string;
 }
