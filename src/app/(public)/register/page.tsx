@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, User, Car } from 'lucide-react';
@@ -24,6 +24,14 @@ const ROLES: { value: Role; label: string; description: string; icon: React.Reac
 ];
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const [role, setRole] = useState<Role>('TOURIST');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
