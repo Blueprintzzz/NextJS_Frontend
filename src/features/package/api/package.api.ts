@@ -52,7 +52,8 @@ function mapPackage(data: Record<string, unknown>): TourPackage {
   }
 
   if (pkg.inclusions) {
-    pkg.inclusions = pkg.inclusions.map((inc) => ({
+    const rawInclusions: RawInclusion[] = pkg.inclusions as unknown as RawInclusion[];
+    pkg.inclusions = rawInclusions.map((inc) => ({
       type: inc.type as TourPackage['inclusions'][number]['type'],
       description: inc.inclusion ?? inc.description ?? '',
     }));
