@@ -27,10 +27,12 @@ function getAuthHeaders(): Record<string, string> {
 
 // Backend returns itineraries[] and inclusions[].inclusion — map to frontend shape
 function mapPackage(data: Record<string, unknown>): TourPackage {
-  const pkg = { ...data } as unknown as TourPackage & {
+  type RawInclusion = { type: string; inclusion?: string; description?: string };
+  type RawPkg = TourPackage & {
     itineraries?: { day: number; title: string; description: string; destinations?: string; airportPickup?: boolean; airportDropoff?: boolean }[];
-    inclusions?: { type: string; inclusion?: string; description?: string }[];
+    inclusions?: RawInclusion[];
   };
+  const pkg = { ...data } as unknown as RawPkg;
 
   if (pkg.itineraries) {
     pkg.itinerary = pkg.itineraries.map((item) => ({
