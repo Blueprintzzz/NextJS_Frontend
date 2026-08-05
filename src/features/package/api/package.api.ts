@@ -77,7 +77,7 @@ export const PackageAPI = {
       const qs = params.toString();
       const res = await fetch(`${API_URL}/packages${qs ? `?${qs}` : ''}`);
       if (!res.ok) return EMPTY_PAGE;
-      const raw = await res.json() as PackagePaginationResponse & { data?: unknown[] };
+      const raw = await res.json() as { data?: unknown[] } & Omit<PackagePaginationResponse, 'data'>;
       if (!raw?.data) return EMPTY_PAGE;
       return {
         ...raw,
@@ -136,7 +136,7 @@ export const PackageAPI = {
         `${API_URL}/packages/category/${category}?page=${page}&limit=${limit}`,
       );
       if (!res.ok) return EMPTY_PAGE;
-      const raw = await res.json() as PackagePaginationResponse & { data?: unknown[] };
+      const raw = await res.json() as { data?: unknown[] } & Omit<PackagePaginationResponse, 'data'>;
       if (!raw?.data) return EMPTY_PAGE;
       return {
         ...raw,
