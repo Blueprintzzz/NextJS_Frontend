@@ -23,7 +23,7 @@ export function VehicleDetail({ vehicle, onSelect }: Props) {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Carousel */}
       <div className="relative h-72 rounded-xl overflow-hidden bg-gray-100">
-        <Image src={images[imgIdx]} alt={vehicle.name} fill className="object-cover" sizes="100vw" />
+        <Image src={images[imgIdx]} alt={vehicle.name ?? ''} fill className="object-cover" sizes="100vw" />
         {images.length > 1 && (
           <>
             <button
