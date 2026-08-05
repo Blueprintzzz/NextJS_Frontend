@@ -8,11 +8,12 @@ import type { VehicleFilters, CreateVehicleInput, VehicleType, VehicleEntity } f
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-function getAuthHeaders() {
+function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const raw = localStorage.getItem('tfx_auth');
   if (!raw) return {};
-  const { accessToken } = JSON.parse(raw);
+  const { accessToken } = JSON.parse(raw) as { accessToken?: string };
+  if (!accessToken) return {};
   return { Authorization: `Bearer ${accessToken}` };
 }
 
