@@ -3,8 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Heart, Leaf, Award, Users, Lightbulb, Shield,
-  CheckCircle, Phone, Mail
+  CheckCircle,
 } from 'lucide-react';
+import ChatWidget from '@/components/ChatWidget';
 
 export const metadata: Metadata = {
   title: 'About Us – Gamanalk',
@@ -199,7 +200,7 @@ export default function AboutUsPage() {
             <p className="text-gray-600 mt-2">Industry recognition for our commitment to excellence</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {['SLTDA Excellence', 'TripAdvisor Travellers Choice', 'Sustainable Tourism Award', 'Green Globe Certified'].map((award, i) => (
+            {['SLTDA Excellence', 'TripAdvisor Travellers Choice', 'Sustainable Tourism Award', 'Green Globe Certified'].map((award) => (
               <div key={award} className="flex flex-col items-center gap-3 p-6 bg-white rounded-2xl shadow-sm">
                 <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center">
                   <Award className="w-8 h-8 text-amber-500" />
@@ -266,6 +267,7 @@ export default function AboutUsPage() {
           </div>
         </div>
       </section>
+      <ChatWidget />
     </main>
   );
 }
